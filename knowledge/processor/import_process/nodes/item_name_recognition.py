@@ -356,7 +356,7 @@ if __name__ == "__main__":
 
     # ——— 测试用例 1: 模拟数据 ———
     print("\n--- 测试用例 1: 模拟数据 ---")
-    path=pathlib.Path(r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\import_temp_dir\chunks.json")
+    path=pathlib.Path(r"D:\path\to\ProductAssistant\knowledge\processor\import_process\import_temp_dir\chunks.json")
     with open(path, "rt", encoding="utf-8") as f:
         mock_chunks = json.load(f)
     try:

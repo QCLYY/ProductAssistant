@@ -1,11 +1,13 @@
-"""MCP 网络搜索节点
+"""Optional web search node for the query pipeline.
 
-通过 MCP 协议调用网络搜索服务获取外部信息。
-使用 OpenAI Agents SDK 的 MCPServerSse 连接百炼 DashScope 搜索服务。
+The graph still uses the historical node name ``web_search_mcp``. Internally,
+the node can use Tavily directly or the older DashScope MCP path.
 """
 
-import json
 import asyncio
+import json
+import urllib.error
+import urllib.request
 from typing import Any
 
 from knowledge.processor.query_process.base import BaseNode, setup_logging
@@ -13,61 +15,115 @@ from knowledge.processor.query_process.state import QueryGraphState
 
 
 class WebSearchMcpNode(BaseNode):
-    """MCP 网络搜索节点。
-
-    通过 MCP 协议（SSE 模式）连接到 DashScope 网络搜索服务，
-    根据用户查询获取相关的网络搜索结果。
-    """
+    """Fetch web search snippets when web search is enabled."""
 
     name = "web_search_mcp"
 
     def process(self, state: QueryGraphState) -> QueryGraphState:
-        self.log_step("step_1", "获取查询内容")
-        query = state.get("rewritten_query", "")
-        docs: list = []
+        query = state.get("rewritten_query") or state.get("original_query", "")
+        docs: list[dict] = []
+
+        if not getattr(self.config, "enable_web_search", False):
+            self.logger.info("Web search is disabled; skipping search.")
+            return {"web_search_docs": []}
 
         if not query:
-            self.logger.warning("查询内容为空，跳过网络搜索")
-            return {}
+            self.logger.warning("Query is empty; skipping web search.")
+            return {"web_search_docs": []}
 
-        self.log_step("step_2", f"执行 MCP 搜索: {query}")
+        provider = (getattr(self.config, "web_search_provider", "") or "tavily").lower()
         try:
-            result = asyncio.run(self._mcp_call(query))
-            if result:
-                pages = result.get("pages") or []
-                for item in pages:
-                    snippet = (item.get("snippet") or "").strip()
-                    url = (item.get("url") or "").strip()
-                    title = (item.get("title") or "").strip()
-                    if not snippet:
-                        continue
-                    docs.append({
-                        "title": title,
-                        "url": url,
-                        "snippet": snippet,
-                    })
-
-                self.log_step("step_3", f"搜索完成，返回 {len(docs)} 条结果")
+            if provider == "tavily":
+                docs = self._tavily_search(query)
+            elif provider in {"dashscope", "dashscope_mcp", "mcp"}:
+                docs = self._dashscope_mcp_search(query)
+            else:
+                self.logger.warning(f"Unsupported web search provider: {provider}")
         except Exception as e:
-            self.logger.error(f"MCP 搜索失败: {e}")
+            self.logger.warning(f"Web search failed; continuing without web docs: {e}")
 
-        if docs:
-            return {"web_search_docs": docs}
-        return {}
+        return {"web_search_docs": docs}
+
+    def _tavily_search(self, query: str) -> list[dict]:
+        api_key = getattr(self.config, "tavily_api_key", "")
+        if not api_key:
+            self.logger.warning("TAVILY_API_KEY is empty; skipping Tavily search.")
+            return []
+
+        payload = {
+            "query": query,
+            "search_depth": getattr(self.config, "tavily_search_depth", "basic"),
+            "max_results": getattr(self.config, "tavily_max_results", 5),
+            "include_answer": False,
+            "include_raw_content": False,
+        }
+        body = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(
+            url=getattr(self.config, "tavily_api_url", "https://api.tavily.com/search"),
+            data=body,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                result = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Tavily HTTP {e.code}: {error_body}") from e
+
+        docs = []
+        for item in result.get("results") or []:
+            snippet = (item.get("content") or item.get("snippet") or "").strip()
+            title = (item.get("title") or "").strip()
+            url = (item.get("url") or "").strip()
+            if snippet:
+                docs.append({
+                    "title": title,
+                    "url": url,
+                    "snippet": snippet,
+                    "source": "tavily",
+                })
+
+        self.log_step("done", f"Tavily returned {len(docs)} results.")
+        return docs
+
+    def _dashscope_mcp_search(self, query: str) -> list[dict]:
+        if not getattr(self.config, "mcp_dashscope_base_url", ""):
+            self.logger.warning("MCP_DASHSCOPE_BASE_URL is empty; skipping MCP search.")
+            return []
+
+        result = asyncio.run(self._mcp_call(query))
+        docs = []
+        for item in (result or {}).get("pages") or []:
+            snippet = (item.get("snippet") or "").strip()
+            url = (item.get("url") or "").strip()
+            title = (item.get("title") or "").strip()
+            if snippet:
+                docs.append({
+                    "title": title,
+                    "url": url,
+                    "snippet": snippet,
+                    "source": "dashscope_mcp",
+                })
+        self.log_step("done", f"DashScope MCP returned {len(docs)} results.")
+        return docs
 
     async def _mcp_call(self, query: str) -> Any:
-        """调用 MCP 搜索服务。
-
-        使用 OpenAI Agents SDK 的 MCPServerSse 客户端，
-        以 SSE 模式连接 DashScope 百炼平台的 Web 搜索 MCP 服务。
-        """
         from agents.mcp import MCPServerStreamableHttp
 
         mcp_client = MCPServerStreamableHttp(
-            name="通用搜索",
+            name="web_search",
             params={
                 "url": self.config.mcp_dashscope_base_url,
-                "headers": {"Authorization": f"Bearer {self.config.openai_api_key}"},
+                "headers": {
+                    "Authorization": (
+                        f"Bearer {self.config.mcp_dashscope_api_key or self.config.openai_api_key}"
+                    )
+                },
                 "timeout": 300,
                 "sse_read_timeout": 300,
             },
@@ -88,10 +144,6 @@ class WebSearchMcpNode(BaseNode):
             await mcp_client.cleanup()
 
 
-# ================================================================== #
-#                        兼容入口                                      #
-# ================================================================== #
-
 _node_instance = WebSearchMcpNode()
 
 
@@ -99,48 +151,13 @@ def node_web_search_mcp(state: QueryGraphState) -> QueryGraphState:
     return _node_instance(state)
 
 
-# ================================================================== #
-#                        测试入口                                      #
-# ================================================================== #
-
 if __name__ == "__main__":
     import uuid
-    from dotenv import load_dotenv
 
-    load_dotenv()
     setup_logging()
-
-    print("=" * 60)
-    print("MCP 网络搜索节点测试")
-    print("=" * 60)
-
     test_state = {
         "session_id": f"test_{uuid.uuid4().hex[:8]}",
         "task_id": f"task_{uuid.uuid4().hex[:8]}",
-        "rewritten_query": "华为MateBook B5-440电脑如何打开护眼模式？",
-        "item_names": ["华为MateBook B5-440笔记本电脑"],
+        "rewritten_query": "test query",
     }
-
-    print(f"\n【输入状态】")
-    print(f"  rewritten_query: {test_state['rewritten_query']}")
-    print("-" * 60)
-
-    try:
-        result = node_web_search_mcp(test_state)
-        docs = result.get("web_search_docs", [])
-
-        if not docs:
-            print("\n搜索执行完成，但未返回任何结果。")
-        else:
-            print(f"\n搜索到 {len(docs)} 条结果:")
-            for i, doc in enumerate(docs, 1):
-                print(f"  [{i}] 标题: {doc.get('title', '无标题')}")
-                print(f"      链接: {doc.get('url', '无链接')}")
-                snippet = doc.get("snippet", "")
-                print(f"      摘要: {snippet}")
-                print()
-
-    except Exception as e:
-        print(f"\n执行失败: {e}")
-        import traceback
-        traceback.print_exc()
+    print(node_web_search_mcp(test_state))

@@ -6,9 +6,10 @@
 from dataclasses import dataclass, field
 from typing import Optional
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 
 @dataclass
@@ -138,15 +139,36 @@ class QueryConfig:
 
     # ==================== MongoDB 配置 ====================
     mongo_url: str = field(
-        default_factory=lambda: os.getenv("MONGO_URL", "mongodb://admin:123456@192.168.10.130:27017")
+        default_factory=lambda: os.getenv("MONGO_URL", "mongodb://admin:123456@127.0.0.1:27017")
     )
     mongo_db_name: str = field(
         default_factory=lambda: os.getenv("MONGO_DB_NAME", "kb001")
     )
 
     # ==================== MCP 配置 ====================
+    web_search_provider: str = field(
+        default_factory=lambda: os.getenv("WEB_SEARCH_PROVIDER", "tavily")
+    )
+    tavily_api_key: str = field(
+        default_factory=lambda: os.getenv("TAVILY_API_KEY", "")
+    )
+    tavily_api_url: str = field(
+        default_factory=lambda: os.getenv("TAVILY_API_URL", "https://api.tavily.com/search")
+    )
+    tavily_max_results: int = field(
+        default_factory=lambda: int(os.getenv("TAVILY_MAX_RESULTS", "5"))
+    )
+    tavily_search_depth: str = field(
+        default_factory=lambda: os.getenv("TAVILY_SEARCH_DEPTH", "basic")
+    )
     mcp_dashscope_base_url: str = field(
         default_factory=lambda: os.getenv("MCP_DASHSCOPE_BASE_URL", "")
+    )
+    mcp_dashscope_api_key: str = field(
+        default_factory=lambda: os.getenv("MCP_DASHSCOPE_API_KEY", "")
+    )
+    enable_web_search: bool = field(
+        default_factory=lambda: os.getenv("ENABLE_WEB_SEARCH", "False").lower() == "true"
     )
 
     @classmethod

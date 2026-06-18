@@ -16,4 +16,4 @@ print(f"设备名{torch.cuda.get_device_name()}")
 
 #三 指定使用本地模型进行解析
 #mineru -p <input_path> -o <output_path> --source local
-#mineru -p E:\\AI+Py\\shopkeeper_brain\\knowledge\\processor\\import_process\\import_temp_dir\\万用表RS-12的使用.pdf -o E:\\AI+Py\\shopkeeper_brain\\knowledge\\processor\\import_process\\output_temp_dir --source local
+# mineru -p D:\\path\\to\\ProductAssistant\\knowledge\\processor\\import_process\\import_temp_dir\\sample.pdf -o D:\\path\\to\\ProductAssistant\\knowledge\\processor\\import_process\\output_temp_dir

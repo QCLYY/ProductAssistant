@@ -90,19 +90,19 @@ def run_import_graph(import_file_path: str, file_dir: str):
 if __name__ == "__main__":
     setup_logging()
     # import_file_path = (
-    #     r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process"
+    #     r"D:\path\to\ProductAssistant\knowledge\processor\import_process"
     #     r"\import_temp_dir\万用表RS-12的使用.pdf"
     # )
     import_file_path = (
-        r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\output_temp_dir\hak180产品安全手册\hybrid_auto\hak180产品安全手册.md"
+        r"D:\path\to\ProductAssistant\knowledge\processor\import_process\output_temp_dir\sample\hybrid_auto\sample.md"
     )
 
     # file_dir = (
-    #     r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process"
+    #     r"D:\path\to\ProductAssistant\knowledge\processor\import_process"
     #     r"\import_temp_dir"
     # )
     file_dir = (
-        r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\output_temp_dir"
+        r"D:\path\to\ProductAssistant\knowledge\processor\import_process\output_temp_dir"
     )
     final_state = run_import_graph(import_file_path, file_dir)
     print(json.dumps(final_state, indent=4, ensure_ascii=False))

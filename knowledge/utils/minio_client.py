@@ -31,7 +31,7 @@ class MinioClient:
         self.endpoint = config.minio_endpoint
         self.access_key = config.minio_access_key
         self.secret_key = config.minio_secret_key
-        self.bucket = config.minio_bucket or "shopkeeper-images"
+        self.bucket = config.minio_bucket or "product-assistant-images"
         self.secure = config.minio_secure
         self._client = Minio(
             endpoint=self.endpoint,

@@ -5,9 +5,13 @@
 
 import os
 import logging
+from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from FlagEmbedding import FlagReranker
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 logger = logging.getLogger("import.reranker")
 

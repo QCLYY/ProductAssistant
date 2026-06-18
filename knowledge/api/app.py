@@ -9,7 +9,7 @@ from knowledge.api.import_file_router import router as import_router
 from knowledge.api.query_router import create_query_app
 
 # ---- 文件导入路由（原版，挂在 /import 前缀下）----
-app = FastAPI(title="掌柜智库 - 知识库")
+app = FastAPI(title="ProductAssistant API")
 
 app.add_middleware(
     CORSMiddleware,

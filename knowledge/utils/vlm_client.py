@@ -2,6 +2,7 @@
 
 import base64
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -26,6 +27,7 @@ class VLMClient:
         self.client = OpenAI(
             base_url=config.openai_api_base,
             api_key=config.openai_api_key or "not-needed",
+            timeout=float(os.getenv("VLM_TIMEOUT_SECONDS", "60")),
         )
         self.model = config.vl_model or "Qwen2.5-VL-7B-Instruct"
         self.rpm = config.requests_per_minute
@@ -85,7 +87,11 @@ class VLMClient:
                 ],
                 max_tokens=200,
             )
-            description = response.choices[0].message.content.strip()
+            if not response.choices:
+                logger.warning(f"VLM returned no choices: {image_path.name}")
+                return ""
+
+            description = (response.choices[0].message.content or "").strip()
             logger.info(f"VLM 描述: {image_path.name} -> {description}")
             return description
 

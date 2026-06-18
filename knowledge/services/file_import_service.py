@@ -26,11 +26,11 @@ class FileImportService:
         - .zip: 解压到 task 目录，找到其中的 .md 文件作为入口
         """
         task_id = str(uuid.uuid4())
-        file_dir = os.path.join(self._base_dir, task_id)#E:\AI+Py\shopkeeper_brain\knowledge\temp_data\915c3482-8838-46d6-97b8-32d32ad77480
+        file_dir = os.path.join(self._base_dir, task_id)
         os.makedirs(file_dir, exist_ok=True)
 
         original_name = file.filename or "untitled"
-        import_file_path = os.path.join(file_dir, original_name) #E:\AI+Py\shopkeeper_brain\knowledge\temp_data\915c3482-8838-46d6-97b8-32d32ad77480\H3C LA2608室内无线网关 用户手册-6W100-整本手册.pdf
+        import_file_path = os.path.join(file_dir, original_name)
 
         # 保存文件
         with open(import_file_path, "wb") as f:

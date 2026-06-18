@@ -352,6 +352,8 @@ class KnowledgeGraphNode(BaseNode):
             self.logger.warning(f"JSON 解析失败: {e}, 原文前200字: {raw_text[:200]}")
             return {"entities": [], "relations": []}
 
+        data = self._normalize_graph_json(data)
+
         cleaned_entities = self._clean_entities(data.get("entities", []))
         valid_names = {e["name"] for e in cleaned_entities}
         cleaned_relations = self._clean_relations(
@@ -361,6 +363,26 @@ class KnowledgeGraphNode(BaseNode):
         return {"entities": cleaned_entities, "relations": cleaned_relations}
 
     # ---------- 实体清洗 ----------
+
+    @staticmethod
+    def _normalize_graph_json(data: Any) -> Dict[str, Any]:
+        if isinstance(data, list):
+            data = {"entities": data, "relations": []}
+        elif isinstance(data, dict) and "entities" not in data:
+            if "name" in data or "label" in data:
+                data = {"entities": [data], "relations": []}
+            else:
+                data = {"entities": [], "relations": []}
+        elif not isinstance(data, dict):
+            return {"entities": [], "relations": []}
+
+        if isinstance(data.get("entities"), dict):
+            data["entities"] = [data["entities"]]
+        if not isinstance(data.get("entities"), list):
+            data["entities"] = []
+        if not isinstance(data.get("relations"), list):
+            data["relations"] = []
+        return data
 
     def _clean_entities(self, entities: List[Dict]) -> List[Dict]:
         """清洗实体：过滤无效项、截断过长名称、白名单校验、去重。"""

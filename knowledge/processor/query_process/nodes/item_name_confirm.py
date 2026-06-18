@@ -5,6 +5,7 @@
 
 import os
 import json
+import re
 from typing import List, Dict, Any
 
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -127,11 +128,38 @@ class ItemNameConfirmNode(BaseNode):
             result.setdefault("item_names", [])
             result.setdefault("rewritten_query", query)
             result["item_names"] = [n.strip() for n in result["item_names"]]
+            if not result["item_names"]:
+                result["item_names"] = self._fallback_item_name_candidates(query, result)
             return result
 
         except Exception as e:
             self.logger.error(f"LLM 提取商品名称失败: {e}")
             return {"item_names": [], "rewritten_query": query}
+
+    @staticmethod
+    def _fallback_item_name_candidates(query: str, parsed: Dict[str, Any]) -> List[str]:
+        candidates: List[str] = []
+
+        cleaned_query = re.sub(r"[？?。！!，,：:；;]", " ", query or "").strip()
+        cleaned_query = re.sub(
+            r"(是什么|是啥|如何|怎么|怎样|使用|操作|维修|咨询|介绍|说明|告诉我|请问)$",
+            "",
+            cleaned_query,
+        ).strip()
+        if cleaned_query:
+            candidates.append(cleaned_query)
+
+        for value in parsed.values():
+            if isinstance(value, str):
+                candidates.append(value.strip())
+            elif isinstance(value, list):
+                candidates.extend(str(item).strip() for item in value)
+
+        deduped: List[str] = []
+        for candidate in candidates:
+            if candidate and candidate not in deduped and len(candidate) <= 80:
+                deduped.append(candidate)
+        return deduped[:3]
 
     # ================================================================== #
     #                  向量匹配 + 评分对齐                                 #
@@ -259,6 +287,7 @@ class ItemNameConfirmNode(BaseNode):
         options = align_result.get("options", [])
 
         if confirmed:
+            confirmed = list(dict.fromkeys(confirmed))
             self._backfill_history_item_names(history, confirmed)
             state["item_names"] = confirmed
             state["rewritten_query"] = rewritten_query
@@ -270,6 +299,11 @@ class ItemNameConfirmNode(BaseNode):
             )
 
         else:
+            if getattr(self.config, "enable_web_search", False):
+                state["item_names"] = []
+                state["rewritten_query"] = rewritten_query
+                return state
+
             state["answer"] = (
                 "抱歉，我无法识别您询问的具体产品名称，"
                 "请提供更准确的产品名称或型号。"

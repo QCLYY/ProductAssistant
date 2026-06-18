@@ -112,12 +112,12 @@ if __name__ == "__main__":
     node = MarkDownImageNode()
     test_state = {
 
-        #"md_path": r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\import_temp_dir\万用表RS-12的使用\hybrid_auto\万用表RS-12的使用.md",
-        "md_path": r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\import_temp_dir\万用表RS-12的使用.md",
+        #"md_path": r"D:\path\to\ProductAssistant\knowledge\processor\import_process\import_temp_dir\sample\hybrid_auto\sample.md",
+        "md_path": r"D:\path\to\ProductAssistant\knowledge\processor\import_process\import_temp_dir\sample.md",
         "md_content": "",
-        "file_dir": r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\import_temp_dir",
-        "import_file_path": r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\import_temp_dir\万用表RS-12的使用.pdf",
-        "file_title":"万用表RS-12的使用"
+        "file_dir": r"D:\path\to\ProductAssistant\knowledge\processor\import_process\import_temp_dir",
+        "import_file_path": r"D:\path\to\ProductAssistant\knowledge\processor\import_process\import_temp_dir\sample.pdf",
+        "file_title":"sample"
     }
     try:
         result_state = node.process(test_state)

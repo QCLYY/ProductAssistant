@@ -590,7 +590,7 @@ class DocumentSplitNode(BaseNode):
 
 if __name__ == "__main__":
     file_path = (
-        r"E:\AI+Py\shopkeeper_brain\knowledge\processor\import_process\output_temp_dir\hak180产品安全手册\hybrid_auto\hak180产品安全手册.md"
+        r"D:\path\to\ProductAssistant\knowledge\processor\import_process\output_temp_dir\sample\hybrid_auto\sample.md"
     )
     with open(file_path, "r", encoding="utf-8") as f:
         md_content = f.read()
