@@ -1,14 +1,15 @@
 
---extra-index-url https://download.pytorch.org/whl/cu120
+--extra-index-url https://download.pytorch.org/whl/cpu
 
 
-torch
-torchvision
+torch==2.8.0+cpu
+torchvision==0.23.0+cpu
 
 
 openai
 minio
 langchain-openai
+langchain-text-splitters
 langgraph
 grandalf
 pymilvus[milvus_lite]
@@ -19,5 +20,7 @@ pymongo
 fastapi
 uvicorn
 jinja2
+python-dotenv
+python-multipart
 mineru[all]
 openai-agents

@@ -28,9 +28,7 @@ for route in query_app.routes:
 # ---- 前端聊天页面 ----
 FRONT_DIR = os.path.join(os.path.dirname(__file__), "..", "front")
 if os.path.isdir(FRONT_DIR):
-    app.mount("/front", StaticFiles(directory=FRONT_DIR, html=True), n
-
-    ame="front")
+    app.mount("/front", StaticFiles(directory=FRONT_DIR, html=True), name="front")
 
 
 if __name__ == "__main__":
