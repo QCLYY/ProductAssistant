@@ -48,6 +48,8 @@ class QueryRequest(BaseModel):
     query: str = Field(..., description="查询内容")
     session_id: Optional[str] = Field(None, description="会话ID，留空自动生成")
     is_stream: bool = Field(False, description="是否流式返回")
+    use_local_search: bool = Field(True, description="是否启用本地资料检索")
+    use_web_search: bool = Field(True, description="是否启用联网搜索")
 
 
 class HistoryItem(BaseModel):
@@ -84,18 +86,31 @@ def _register_routes(app: FastAPI):
         user_query = request.query
         session_id = request.session_id or str(uuid.uuid4())
         is_stream = request.is_stream
+        use_local_search = request.use_local_search
+        use_web_search = request.use_web_search
 
         update_task_status(session_id, TASK_STATUS_PROCESSING)
 
         if is_stream:
             create_sse_queue(session_id)
             background_tasks.add_task(
-                _run_query_graph, session_id, user_query, is_stream
+                _run_query_graph,
+                session_id,
+                user_query,
+                is_stream,
+                use_local_search,
+                use_web_search,
             )
             await asyncio.sleep(0.1)
             return {"message": "Query submitted", "session_id": session_id, "task_id": session_id}
         else:
-            _run_query_graph(session_id, user_query, is_stream)
+            _run_query_graph(
+                session_id,
+                user_query,
+                is_stream,
+                use_local_search,
+                use_web_search,
+            )
             answer = get_task_result(session_id, "answer", "")
             return {
                 "message": "处理完成",
@@ -196,7 +211,13 @@ def _build_node_log(node_name: str, result: dict) -> str:
 #                    后台查询执行                                       #
 # ================================================================== #
 
-def _run_query_graph(session_id: str, user_query: str, is_stream: bool):
+def _run_query_graph(
+        session_id: str,
+        user_query: str,
+        is_stream: bool,
+        use_local_search: bool = True,
+        use_web_search: bool = True,
+):
     """后台任务：执行 LangGraph 查询流程图。"""
     clear_task_progress(session_id)  # 清除上次的进度，保留 status
     try:
@@ -205,6 +226,8 @@ def _run_query_graph(session_id: str, user_query: str, is_stream: bool):
             "session_id": session_id,
             "task_id": session_id,
             "is_stream": is_stream,
+            "use_local_search": use_local_search,
+            "use_web_search": use_web_search,
         }
 
         final_state = None

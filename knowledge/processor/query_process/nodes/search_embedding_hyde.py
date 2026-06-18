@@ -26,6 +26,10 @@ class SearchEmbeddingHydeNode(BaseNode):
     OUTPUT_FIELDS = ["chunk_id", "content", "item_name"]
 
     def process(self, state: QueryGraphState) -> QueryGraphState:
+        if not state.get("use_local_search", True):
+            self.log_step("skip", "本地资料检索未启用，跳过 HyDE 检索")
+            return {"hyde_embedding_chunks": [], "hyde_doc": ""}
+
         query = state.get("rewritten_query") or state.get("original_query", "")
         if not query:
             self.logger.error("未找到用户查询")

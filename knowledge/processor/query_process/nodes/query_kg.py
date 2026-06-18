@@ -32,6 +32,17 @@ class QueryKgNode(BaseNode):
     W_NEIGHBOR = 1.0
 
     def process(self, state: QueryGraphState) -> QueryGraphState:
+        if not state.get("use_local_search", True):
+            self.log_step("skip", "本地资料检索未启用，跳过知识关联查询")
+            return {
+                "kg_chunks": [],
+                "kg_triples": [],
+                "kg_seed_nodes": [],
+                "kg_entities": [],
+                "kg_aligned_entities": [],
+                "kg_alignments": [],
+            }
+
         from knowledge.tools.llm_utils import get_llm_client
 
         # 1. 预处理

@@ -36,13 +36,13 @@
     }
     .app{
       width:100%;
-      max-width:980px;
-      height:min(820px, 92vh);
+      max-width:1120px;
+      height:min(860px, 94vh);
       background:var(--panel);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border:1px solid var(--border);
-      border-radius:16px;
+      border-radius:12px;
       box-shadow:var(--shadow);
       overflow:hidden;
       display:flex;
@@ -55,6 +55,7 @@
       padding:14px 18px;
       border-bottom:1px solid var(--border);
       background:rgba(15, 23, 42, 0.5);
+      flex-wrap:wrap;
     }
     .brand{
       display:flex;
@@ -79,6 +80,61 @@
       display:flex;
       gap:10px;
       align-items:center;
+      flex-wrap:wrap;
+    }
+    .mode-strip{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:10px 18px;
+      border-bottom:1px solid var(--border);
+      background:rgba(15, 23, 42, 0.38);
+    }
+    .mode-title{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:150px;
+    }
+    .mode-title strong{
+      font-size:13px;
+      color:#e2e8f0;
+    }
+    .mode-title span{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .mode-options{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .mode-toggle{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      min-height:32px;
+      padding:6px 10px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background:rgba(15, 23, 42, 0.58);
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      transition:border-color .18s ease, background .18s ease, color .18s ease;
+    }
+    .mode-toggle input{
+      accent-color:#38bdf8;
+      cursor:pointer;
+    }
+    .mode-toggle.active{
+      color:#e2e8f0;
+      border-color:rgba(56, 189, 248, 0.35);
+      background:rgba(56, 189, 248, 0.1);
     }
     .pill{
       font-size:12px;
@@ -93,9 +149,18 @@
       background:linear-gradient(135deg, var(--brand), var(--brand2));
       color:#fff;
       padding:8px 12px;
-      border-radius:10px;
+      border-radius:8px;
       font-size:12px;
       cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .btn.secondary{
+      color:#cbd5e1;
+      border:1px solid var(--border);
+      background:rgba(15, 23, 42, 0.55);
     }
     .btn:disabled{opacity:.6;cursor:not-allowed}
 
@@ -150,6 +215,61 @@
       white-space:pre-wrap;
       overflow-wrap: break-word;
       color:#e2e8f0;
+    }
+    .welcome .bubble{
+      max-width:min(800px, 86%);
+      padding:16px;
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.56));
+      border-color:rgba(56, 189, 248, 0.16);
+    }
+    .welcome-title{
+      margin:0 0 8px;
+      font-size:18px;
+      line-height:1.35;
+      color:#f8fafc;
+      font-weight:700;
+    }
+    .welcome-copy{
+      margin:0;
+      color:#cbd5e1;
+      line-height:1.7;
+    }
+    .welcome-status{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+    .status-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148, 163, 184, 0.18);
+      background:rgba(30, 41, 59, 0.55);
+      color:#a5b4fc;
+      font-size:12px;
+    }
+    .quick-prompts{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+    .quick-prompt{
+      border:1px solid rgba(56, 189, 248, 0.22);
+      background:rgba(56, 189, 248, 0.08);
+      color:#dbeafe;
+      border-radius:8px;
+      padding:7px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .quick-prompt:hover{
+      border-color:rgba(56, 189, 248, 0.48);
+      background:rgba(56, 189, 248, 0.14);
     }
     .msg.user .bubble{
       background:var(--bubble-user);
@@ -267,6 +387,16 @@
       background:rgba(15, 23, 42, 0.6);
       color:#94a3b8;
     }
+    @media (max-width: 720px){
+      body{padding:10px;align-items:stretch}
+      .app{height:calc(100vh - 20px)}
+      .brand{min-width:0}
+      .top-actions{width:100%;margin-left:0}
+      .mode-strip{align-items:flex-start;flex-direction:column}
+      .mode-options{justify-content:flex-start}
+      .bubble,.welcome .bubble{max-width:100%}
+      .send{width:72px}
+    }
   </style>
 </head>
 <body>
@@ -276,24 +406,54 @@
         <div class="logo"></div>
         <div class="title">
           <strong>ProductAssistant</strong>
-          <span id="subTitle">在线 · 可查询本地知识库与 Tavily 联网信息</span>
+          <span id="subTitle">在线 · 产品资料问答与联网搜索</span>
         </div>
       </div>
       <div class="top-actions">
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;color:var(--muted);margin-right:10px;">
+        <a class="btn secondary" href="/">上传资料</a>
+        <button class="btn" id="btnClear">清空对话</button>
+      </div>
+    </div>
+
+    <div class="mode-strip" aria-label="能力状态">
+      <div class="mode-title">
+        <strong>能力状态</strong>
+        <span>按本次问题选择需要启用的能力</span>
+      </div>
+      <div class="mode-options">
+        <label class="mode-toggle active">
+          <input type="checkbox" id="localSearchToggle" checked> 本地搜索
+        </label>
+        <label class="mode-toggle active">
+          <input type="checkbox" id="webSearchToggle" checked> 联网搜索
+        </label>
+        <label class="mode-toggle active">
           <input type="checkbox" id="streamToggle" checked> 流式输出
         </label>
-        <button class="btn" id="btnClear">清空对话</button>
       </div>
     </div>
 
     <div class="chat" id="chat">
       <div class="dayline">今天</div>
-      <div class="msg bot">
+      <div class="msg bot welcome">
         <div class="avatar bot">PA</div>
         <div>
-          <div class="bubble">你好，我是 ProductAssistant。你可以查询已导入的产品资料，也可以结合联网信息提问，我会在“阶段进度”里展示处理过程。</div>
-          <div class="meta">提示：可以问“测试产品A是什么？”或“联网搜索某个产品资料”。</div>
+          <div class="bubble">
+            <div class="welcome-title">你好，我是你的产品助手小P</div>
+            <p class="welcome-copy">我可以基于你上传的产品资料回答问题，也可以联网搜索哦~有什么想问的欢迎咨询！</p>
+            <div class="welcome-status">
+              <span class="status-chip">本地资料问答</span>
+              <span class="status-chip">联网搜索</span>
+              <span class="status-chip">阶段进度可见</span>
+            </div>
+            <div class="quick-prompts" aria-label="常用问题">
+              <button class="quick-prompt" type="button" data-prompt="测试产品A是什么？">测试产品A是什么？</button>
+              <button class="quick-prompt" type="button" data-prompt="这个产品有哪些核心功能？">核心功能</button>
+              <button class="quick-prompt" type="button" data-prompt="这个产品使用时有哪些注意事项？">注意事项</button>
+              <button class="quick-prompt" type="button" data-prompt="帮我联网搜索这个产品的相关资料">联网查资料</button>
+            </div>
+          </div>
+          <div class="meta">你可以先上传资料，再围绕产品名称、功能、参数、使用方法或售后问题提问。</div>
         </div>
       </div>
     </div>
@@ -312,6 +472,8 @@
     const inputEl = document.getElementById('input');
     const sendBtn = document.getElementById('send');
     const btnClear = document.getElementById('btnClear');
+    const localSearchToggle = document.getElementById('localSearchToggle');
+    const webSearchToggle = document.getElementById('webSearchToggle');
     const streamToggle = document.getElementById('streamToggle');
 
     // Session ID Logic
@@ -319,6 +481,24 @@
     if (!sessionId) {
       sessionId = 'sess-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
       localStorage.setItem('kb_session_id', sessionId);
+    }
+
+    function syncModeToggle(input){
+      const wrap = input.closest('.mode-toggle');
+      if(!wrap) return;
+      wrap.classList.toggle('active', input.checked);
+    }
+
+    [localSearchToggle, webSearchToggle, streamToggle].forEach(input => {
+      syncModeToggle(input);
+      input.addEventListener('change', () => syncModeToggle(input));
+    });
+
+    function getSearchOptions(){
+      return {
+        use_local_search: localSearchToggle.checked,
+        use_web_search: webSearchToggle.checked,
+      };
     }
 
     function scrollToBottom(){
@@ -689,13 +869,15 @@
 
     async function submitQuery(text){
       const isStream = streamToggle.checked;
+      const searchOptions = getSearchOptions();
       const res = await fetch(`${API_BASE}/query`, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
           query: text,
           session_id: sessionId,
-          is_stream: isStream
+          is_stream: isStream,
+          ...searchOptions
         })
       });
       if(!res.ok){
@@ -734,6 +916,11 @@
       console.log('[perf] A onSend start', performance.now());
       const text = (inputEl.value || '').trim();
       if(!text) return;
+      const searchOptions = getSearchOptions();
+      if(!searchOptions.use_local_search && !searchOptions.use_web_search){
+        alert('请至少开启“本地搜索”或“联网搜索”中的一种能力。');
+        return;
+      }
       inputEl.value = '';
       addUserMsg(text);
       // 折叠之前所有消息的进度条
@@ -743,7 +930,7 @@
 
       try{
         const isStream = streamToggle.checked;
-        console.log('[perf] B submitQuery start', performance.now(), { isStream });
+        console.log('[perf] B submitQuery start', performance.now(), { isStream, ...searchOptions });
         const data = await submitQuery(text);
         console.log('[perf] B submitQuery end', performance.now(), data);
         
@@ -882,6 +1069,13 @@
         sendBtn.disabled = false;
       }
     }
+
+    document.querySelectorAll('[data-prompt]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        inputEl.value = btn.getAttribute('data-prompt') || '';
+        inputEl.focus();
+      });
+    });
 
     sendBtn.addEventListener('click', onSend);
     inputEl.addEventListener('keydown', (e) => {

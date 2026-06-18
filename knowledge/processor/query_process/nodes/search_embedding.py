@@ -25,6 +25,10 @@ class SearchEmbeddingNode(BaseNode):
     OUTPUT_FIELDS = ["chunk_id", "content", "item_name"]
 
     def process(self, state: QueryGraphState) -> QueryGraphState:
+        if not state.get("use_local_search", True):
+            self.log_step("skip", "本地资料检索未启用，跳过向量检索")
+            return {"embedding_chunks": []}
+
         from knowledge.tools.embedding_utils import generate_hybrid_embeddings
         from knowledge.tools.milvus_utils import (
             get_milvus_client,

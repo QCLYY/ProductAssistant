@@ -23,6 +23,10 @@ class WebSearchMcpNode(BaseNode):
         query = state.get("rewritten_query") or state.get("original_query", "")
         docs: list[dict] = []
 
+        if not state.get("use_web_search", True):
+            self.logger.info("Web search is disabled for this request; skipping search.")
+            return {"web_search_docs": []}
+
         if not getattr(self.config, "enable_web_search", False):
             self.logger.info("Web search is disabled; skipping search.")
             return {"web_search_docs": []}

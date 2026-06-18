@@ -44,7 +44,13 @@ class ItemNameConfirmNode(BaseNode):
         self.logger.info(f"LLM提取结果: item_names={item_names}, rewritten={rewritten_query}")
 
         # 3. 向量匹配 + 评分对齐
-        align_result = self._match_and_align(item_names) if item_names else {}
+        use_local_search = state.get("use_local_search", True)
+        if item_names and use_local_search:
+            align_result = self._match_and_align(item_names)
+        else:
+            if item_names:
+                self.logger.info("本地资料检索未启用，跳过商品名称向量对齐")
+            align_result = {}
         self.logger.info(f"对齐结果: {align_result}")
 
         # 4. 更新状态
@@ -299,7 +305,17 @@ class ItemNameConfirmNode(BaseNode):
             )
 
         else:
-            if getattr(self.config, "enable_web_search", False):
+            use_local_search = state.get("use_local_search", True)
+            use_web_search = (
+                state.get("use_web_search", True)
+                and getattr(self.config, "enable_web_search", False)
+            )
+
+            if not use_local_search and not use_web_search:
+                state["answer"] = "请至少开启“本地搜索”或“联网搜索”中的一种能力后再提问。"
+                return state
+
+            if use_web_search:
                 state["item_names"] = []
                 state["rewritten_query"] = rewritten_query
                 return state
