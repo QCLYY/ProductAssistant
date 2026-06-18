@@ -1,0 +1,12 @@
+.venv/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.claude
+
+# Runtime uploads and generated import artifacts
+knowledge/temp_data/
+knowledge/processor/import_process/import_temp_dir/
+knowledge/processor/import_process/output_temp_dir/

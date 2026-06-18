@@ -1,0 +1,19 @@
+# 在顶部添加额外的源
+--extra-index-url https://download.pytorch.org/whl/cu120
+
+# 正常写包名，pip 会自动去上面的 extra-index 里匹配合适的版本
+torch
+torchvision
+
+# 剩下的包会优先匹配你本地配置的默认清华源
+minio
+langchain-openai
+langgraph
+grandalf
+pymilvus[milvus_lite]
+pymilvus[model]
+sentence-transformers
+neo4j
+pymongo
+mineru[all]
+openai-agents
