@@ -62,7 +62,7 @@ class ItemNameRecognitionNode(BaseNode):
         self._backfill_item_name(state, chunks, item_name)
 
         # Step 5: 生成向量
-        dense_vector, sparse_vector = self._generate_vectors(item_name)
+        dense_vector, sparse_vector = self._generate_vectors(item_name, config)
 
         # Step 6: 保存到 Milvus
         self._save_to_milvus(
@@ -142,6 +142,10 @@ class ItemNameRecognitionNode(BaseNode):
     ) -> str:
         self.log_step("step_3", "调用 LLM 识别")
 
+        if not (config.openai_api_base and config.openai_api_key and (config.item_model or config.default_model)):
+            self.logger.warning("LLM 配置不完整，回退使用文件标题作为商品名称")
+            return file_title
+
         prompt = f"""请从以下信息中识别出商品名称与型号：
 文件名：{file_title}
 
@@ -197,9 +201,13 @@ class ItemNameRecognitionNode(BaseNode):
     # ------------------------------------------------------------------ #
 
     def _generate_vectors(
-        self, item_name: str
+        self, item_name: str, config
     ) -> Tuple[Optional[List[float]], Optional[dict]]:
         self.log_step("step_5", "生成向量")
+
+        if config.import_smoke_test:
+            self.logger.warning("IMPORT_SMOKE_TEST=true，使用占位向量跳过 BGE-M3")
+            return [0.0] * BGE_M3_DIM, {0: 1.0}
 
         try:
             bge_m3_ef = get_bge_m3_model()

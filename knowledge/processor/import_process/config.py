@@ -105,6 +105,9 @@ class ImportConfig:
 
     # ==================== 速率限制 ====================
     requests_per_minute: int = 12  # 图片总结 API 速率限制
+    import_smoke_test: bool = field(
+        default_factory=lambda: os.getenv("IMPORT_SMOKE_TEST", "False").lower() == "true"
+    )
 
     @classmethod
     def from_env(cls) -> "ImportConfig":

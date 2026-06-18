@@ -176,6 +176,10 @@ class KnowledgeGraphNode(BaseNode):
             self.logger.info("chunks 为空，跳过知识图谱构建")
             return state
 
+        if config.import_smoke_test:
+            self.logger.warning("IMPORT_SMOKE_TEST=true，跳过知识图谱 LLM 抽取")
+            return state
+
         self.log_step("start", f"开始处理 {len(chunks)} 个切片")
 
         # 预初始化外部资源

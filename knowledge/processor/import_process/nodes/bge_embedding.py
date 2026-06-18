@@ -43,6 +43,23 @@ class BgeEmbeddingNode(BaseNode):
 
         self.log_step("step_1", f"开始为 {len(chunks)} 个切片生成向量")
 
+        if config.import_smoke_test:
+            self.logger.warning("IMPORT_SMOKE_TEST=true，使用占位向量跳过 BGE-M3")
+            state["chunks"] = [
+                {
+                    "content": chunk.get("content"),
+                    "title": chunk.get("title"),
+                    "parent_title": chunk.get("parent_title", ""),
+                    "part": chunk.get("part", 0),
+                    "file_title": chunk.get("file_title"),
+                    "item_name": chunk.get("item_name"),
+                    "dense_vector": [0.0] * config.embedding_dim,
+                    "sparse_vector": {0: 1.0},
+                }
+                for chunk in chunks
+            ]
+            return state
+
         # Step 2: 初始化 BGE-M3
         try:
             bge_m3_ef = get_bge_m3_model()
