@@ -23,7 +23,7 @@ class SearchEmbeddingHydeNode(BaseNode):
     SEARCH_TOP_K = 10
     RERANK_TOP_K = 10
     RANKER_WEIGHTS = (0.5, 0.5)
-    OUTPUT_FIELDS = ["chunk_id", "content", "item_name"]
+    OUTPUT_FIELDS = ["chunk_id", "content", "title", "file_title", "item_name"]
 
     def process(self, state: QueryGraphState) -> QueryGraphState:
         if not state.get("use_local_search", True):

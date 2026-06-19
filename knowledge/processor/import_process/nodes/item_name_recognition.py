@@ -1,7 +1,7 @@
 """
-商品名称识别节点
+资料主体识别节点
 
-从文档切片中调用 LLM 识别商品/产品名称，
+从文档切片中调用 LLM 识别产品名称、型号、文档标题或资料主题，
 使用 BGE-M3 生成混合嵌入（稠密 + 稀疏向量），
 持久化到 Milvus 向量数据库，回填 item_name 到 state 和 chunks。
 """
@@ -29,12 +29,12 @@ BGE_M3_DIM = 1024
 
 class ItemNameRecognitionNode(BaseNode):
     """
-    商品名称识别节点
+    资料主体识别节点
 
     处理流程（6 步）：
     1. 验证输入（file_title + chunks 非空）
     2. 从前 K 个切片构造识别上下文
-    3. 调用 LLM 识别商品名称（品牌 + 型号 + 名称）
+    3. 调用 LLM 识别资料主体名称（产品、型号或文档主题）
     4. 回填 item_name 到 state 和每个 chunk
     5. 使用 BGE-M3 生成混合嵌入向量（稠密 + 稀疏）
     6. 保存到 Milvus 向量数据库
@@ -143,31 +143,32 @@ class ItemNameRecognitionNode(BaseNode):
         self.log_step("step_3", "调用 LLM 识别")
 
         if not (config.openai_api_base and config.openai_api_key and (config.item_model or config.default_model)):
-            self.logger.warning("LLM 配置不完整，回退使用文件标题作为商品名称")
+            self.logger.warning("LLM 配置不完整，回退使用文件标题作为资料主体名称")
             return file_title
 
-        prompt = f"""请从以下信息中识别出商品名称与型号：
+        prompt = f"""请从以下信息中识别出这份资料的核心主体名称：
 文件名：{file_title}
 
 正文切片（用于辅助识别）：
 {context}
 
 要求：
-1. 返回内容为字符串形式，最好是带品牌、型号和名称的完整商品名称。比如：苏伯尓5000W大功率电磁炉；
-2. 返回结果应该只包含商品名称，不要添加任何解释或其他内容；
-3. 如果无法识别商品名称，请返回空字符串。"""
+1. 如果资料描述的是产品，请优先返回品牌、型号和产品名，例如：RS-12 数字万用表；
+2. 如果资料不是产品说明，请返回文档主题或资料标题，例如：西工大电信院+航海院827考研24年录取详细分析；
+3. 返回结果应该只包含一个名称，不要添加任何解释或其他内容；
+4. 如果无法识别，请返回空字符串。"""
 
         try:
             llm = get_llm_client(model=config.item_model, json_mode=False)
             resp = llm.invoke([
-                SystemMessage(content="你是商品识别专家，只输出字符串。"),
+                SystemMessage(content="你是资料主体识别专家，只输出字符串。"),
                 HumanMessage(content=prompt),
             ])
 
             item_name = getattr(resp, "content", "").strip().strip('"').strip("'").strip()
 
             if not item_name:
-                self.logger.warning("LLM 未能识别商品名称，回退使用文件标题")
+                self.logger.warning("LLM 未能识别资料主体名称，回退使用文件标题")
                 item_name = file_title
 
             self.logger.info(f"识别结果: {item_name}")
@@ -175,7 +176,7 @@ class ItemNameRecognitionNode(BaseNode):
 
         except Exception as e:
             self.logger.warning(
-                f"LLM 调用失败: {e}，回退使用文件标题作为商品名称"
+                f"LLM 调用失败: {e}，回退使用文件标题作为资料主体名称"
             )
             return file_title
 

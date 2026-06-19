@@ -471,7 +471,7 @@ class QueryKgNode(BaseNode):
                 client=get_milvus_client(),
                 collection_name=collection_name,
                 chunk_ids=chunk_ids,
-                output_fields=["chunk_id", "content", "title", "item_name"],
+                output_fields=["chunk_id", "content", "title", "file_title", "item_name"],
             )
         except Exception as e:
             self.logger.error(f"Milvus 回填异常: {e}")

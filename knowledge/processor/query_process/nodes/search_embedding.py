@@ -22,7 +22,7 @@ class SearchEmbeddingNode(BaseNode):
     SEARCH_TOP_K = 10              # 稠密/稀疏各路分别召回数
     RERANK_TOP_K = 10              # WeightedRanker 融合后返回数
     RANKER_WEIGHTS = (0.5, 0.5)    # 稠密:稀疏 权重
-    OUTPUT_FIELDS = ["chunk_id", "content", "item_name"]
+    OUTPUT_FIELDS = ["chunk_id", "content", "title", "file_title", "item_name"]
 
     def process(self, state: QueryGraphState) -> QueryGraphState:
         if not state.get("use_local_search", True):

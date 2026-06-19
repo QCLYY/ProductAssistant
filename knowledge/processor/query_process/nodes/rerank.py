@@ -46,10 +46,13 @@ class RerankNode(BaseNode):
         for doc in (state.get("rrf_chunks") or []):
             if not isinstance(doc, dict) or not doc.get("content"):
                 continue
+            title = doc.get("title") or doc.get("file_title") or ""
+            if doc.get("file_title") and doc.get("title") and doc.get("file_title") != doc.get("title"):
+                title = f"{doc.get('file_title')} / {doc.get('title')}"
             doc_items.append(self._make_doc_item(
                 text=doc["content"],
                 chunk_id=doc.get("chunk_id") or doc.get("id"),
-                title=doc.get("title", ""),
+                title=title,
                 source="local",
             ))
 

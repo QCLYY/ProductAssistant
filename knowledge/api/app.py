@@ -6,10 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from knowledge.api.import_file_router import router as import_router
+from knowledge.api.material_router import router as material_router
 from knowledge.api.query_router import create_query_app
 
 # ---- 文件导入路由（原版，挂在 /import 前缀下）----
-app = FastAPI(title="ProductAssistant API")
+app = FastAPI(title="品辅 API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(import_router)
+app.include_router(material_router)
 
 # ---- 查询路由（挂载到同一实例）----
 query_app = create_query_app()

@@ -46,14 +46,25 @@ class ItemNameConfirmNode(BaseNode):
             self._dump_state(state, "输出")
             return state
 
-        # 2. LLM 提取商品名称
+        use_local_search = state.get("use_local_search", True)
+        use_web_search = (
+            state.get("use_web_search", True)
+            and getattr(self.config, "enable_web_search", False)
+        )
+        if not use_local_search and not use_web_search:
+            state["answer"] = "请至少开启“本地搜索”或“联网搜索”中的一种能力后再提问。"
+            self._write_history(state, session_id, query, message_id)
+            state["history"] = history
+            self._dump_state(state, "输出")
+            return state
+
+        # 2. LLM 提取资料主体名称
         extract_res = self._extract_item_names(query, history)
         item_names = extract_res.get("item_names", [])
         rewritten_query = extract_res.get("rewritten_query", query)
         self.logger.info(f"LLM提取结果: item_names={item_names}, rewritten={rewritten_query}")
 
         # 3. 向量匹配 + 评分对齐
-        use_local_search = state.get("use_local_search", True)
         if item_names and use_local_search:
             align_result = self._match_and_align(item_names)
         else:
@@ -130,18 +141,22 @@ class ItemNameConfirmNode(BaseNode):
         )
 
     def _build_material_list_answer(self) -> str:
-        materials = self._list_local_materials()
+        from knowledge.services.material_service import material_service
+
+        materials = material_service.list_materials().get("materials", [])
         if not materials:
             return "目前没有查询到已上传的本地资料。"
 
         lines = ["目前可以查询到以下本地资料："]
         for index, item in enumerate(materials, 1):
             file_title = item.get("file_title") or "未命名资料"
-            item_name = item.get("item_name") or ""
-            if item_name and item_name != file_title:
-                lines.append(f"{index}. {file_title}（识别名称：{item_name}）")
+            material_name = item.get("material_name") or ""
+            chunk_count = item.get("chunk_count", 0)
+            suffix = f"，{chunk_count} 个片段" if chunk_count else ""
+            if material_name and material_name != file_title:
+                lines.append(f"{index}. {file_title}（识别名称：{material_name}{suffix}）")
             else:
-                lines.append(f"{index}. {file_title}")
+                lines.append(f"{index}. {file_title}{suffix}")
         return "\n".join(lines)
 
     def _list_local_materials(self, limit: int = 1000) -> List[Dict[str, str]]:
@@ -221,7 +236,7 @@ class ItemNameConfirmNode(BaseNode):
 
         try:
             response = client.invoke([
-                SystemMessage(content="你是一个专业的客服助手，擅长理解用户意图和提取关键信息。"),
+                SystemMessage(content="你是品辅的资料理解模块，擅长理解用户意图并提取产品或资料名称。"),
                 HumanMessage(content=prompt),
             ])
 
@@ -238,7 +253,7 @@ class ItemNameConfirmNode(BaseNode):
             return result
 
         except Exception as e:
-            self.logger.error(f"LLM 提取商品名称失败: {e}")
+            self.logger.error(f"LLM 提取资料主体名称失败: {e}")
             return {"item_names": [], "rewritten_query": query}
 
     @staticmethod

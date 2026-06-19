@@ -82,7 +82,7 @@ class AnswerOutputNode(BaseNode):
         return ANSWER_PROMPT.format(
             context=context_str or "无参考内容",
             history=history_str or "无历史对话",
-            item_names=", ".join(item_names) if item_names else "无指定商品",
+            item_names=", ".join(item_names) if item_names else "无指定资料或产品",
             graph_relation_description=graph_str or "无图谱关系",
             question=question,
         )
