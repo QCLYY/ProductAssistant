@@ -25,15 +25,15 @@ class WebSearchMcpNode(BaseNode):
 
         if not state.get("use_web_search", True):
             self.logger.info("Web search is disabled for this request; skipping search.")
-            return {"web_search_docs": []}
+            return {"web_search_docs": [], "web_search_attempted": True}
 
         if not getattr(self.config, "enable_web_search", False):
             self.logger.info("Web search is disabled; skipping search.")
-            return {"web_search_docs": []}
+            return {"web_search_docs": [], "web_search_attempted": True}
 
         if not query:
             self.logger.warning("Query is empty; skipping web search.")
-            return {"web_search_docs": []}
+            return {"web_search_docs": [], "web_search_attempted": True}
 
         provider = (getattr(self.config, "web_search_provider", "") or "tavily").lower()
         try:
@@ -46,7 +46,7 @@ class WebSearchMcpNode(BaseNode):
         except Exception as e:
             self.logger.warning(f"Web search failed; continuing without web docs: {e}")
 
-        return {"web_search_docs": docs}
+        return {"web_search_docs": self._dedupe_docs(docs), "web_search_attempted": True}
 
     def _tavily_search(self, query: str) -> list[dict]:
         api_key = getattr(self.config, "tavily_api_key", "")
@@ -93,7 +93,7 @@ class WebSearchMcpNode(BaseNode):
                 })
 
         self.log_step("done", f"Tavily returned {len(docs)} results.")
-        return docs
+        return self._dedupe_docs(docs)
 
     def _dashscope_mcp_search(self, query: str) -> list[dict]:
         if not getattr(self.config, "mcp_dashscope_base_url", ""):
@@ -114,7 +114,24 @@ class WebSearchMcpNode(BaseNode):
                     "source": "dashscope_mcp",
                 })
         self.log_step("done", f"DashScope MCP returned {len(docs)} results.")
-        return docs
+        return self._dedupe_docs(docs)
+
+    @staticmethod
+    def _dedupe_docs(docs: list[dict]) -> list[dict]:
+        seen: set[str] = set()
+        unique: list[dict] = []
+        for doc in docs or []:
+            if not isinstance(doc, dict):
+                continue
+            key = (
+                (doc.get("url") or "").strip().lower()
+                or f"{(doc.get('title') or '').strip()}::{(doc.get('snippet') or doc.get('content') or '').strip()[:160]}"
+            )
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            unique.append(doc)
+        return unique
 
     async def _mcp_call(self, query: str) -> Any:
         from agents.mcp import MCPServerStreamableHttp

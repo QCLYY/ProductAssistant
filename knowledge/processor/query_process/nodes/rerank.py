@@ -22,7 +22,7 @@ class RerankNode(BaseNode):
         question = state.get("rewritten_query") or state.get("original_query", "")
 
         # Step 2-3: 合并本地 RRF 结果 + 网页搜索结果
-        doc_items = self._merge_docs(state)
+        doc_items = self._dedupe_doc_items(self._merge_docs(state))
 
         # Step 4-5: Reranker 精排
         self.log_step("step_1", f"重排序 {len(doc_items)} 篇文档")
@@ -67,6 +67,23 @@ class RerankNode(BaseNode):
 
         self.logger.info(f"合并文档: {len(doc_items)} 篇")
         return doc_items
+
+    @staticmethod
+    def _dedupe_doc_items(doc_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """按 chunk_id、url 或正文片段去重，保留最先出现的结果。"""
+        seen: set[str] = set()
+        unique: List[Dict[str, Any]] = []
+        for item in doc_items or []:
+            chunk_id = str(item.get("chunk_id") or "").strip()
+            url = str(item.get("url") or "").strip().lower()
+            title = str(item.get("title") or "").strip()
+            text = str(item.get("text") or "").strip()
+            key = chunk_id or url or f"{title}::{text[:180]}"
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            unique.append(item)
+        return unique
 
     @staticmethod
     def _make_doc_item(

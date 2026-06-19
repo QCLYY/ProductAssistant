@@ -228,6 +228,7 @@ def _run_query_graph(
             "is_stream": is_stream,
             "use_local_search": use_local_search,
             "use_web_search": use_web_search,
+            "web_search_attempted": False,
         }
 
         final_state = None

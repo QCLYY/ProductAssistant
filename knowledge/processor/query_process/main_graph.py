@@ -37,6 +37,21 @@ def route_after_item_confirm(state: QueryGraphState) -> bool:
     return False
 
 
+def route_after_rerank(state: QueryGraphState) -> str:
+    """本地优先，必要时联网兜底。
+
+    有本地重排结果时直接生成答案；没有本地结果且本次允许联网时，
+    再触发一次联网搜索。联网已尝试或未开启联网时，进入答案节点。
+    """
+    if state.get("reranked_docs") or state.get("kg_triples"):
+        return "answer_output"
+
+    if state.get("use_web_search", True) and not state.get("web_search_attempted", False):
+        return "web_search_mcp"
+
+    return "answer_output"
+
+
 def create_query_graph() -> CompiledStateGraph:
     """创建查询流程图。
 
@@ -51,27 +66,27 @@ def create_query_graph() -> CompiledStateGraph:
               │                                              │
               └── (无答案) ──> multi_search ─────┬──────────>│
                                    │             │           │
-                         ┌─────────┼─────────────┼───────┐   │
-                         │         │             │       │   │
-                         v         v             v       v   │
-                   embedding  hyde_embedding  query_kg  web  │
-                         │         │             │       │   │
-                         └─────────┴─────────────┴───────┘   │
+                         ┌─────────┼─────────────┐           │
+                         │         │             │           │
+                         v         v             v           │
+                   embedding  hyde_embedding  query_kg       │
+                         │         │             │           │
+                         └─────────┴─────────────┘           │
                                        │                     │
                                        v                     │
-                                     join                      │
+                                     join                    │
                                        │                     │
                                        v                     │
                                       rrf                    │
                                        │                     │
                                        v                     │
                                     rerank                   │
-                                       │                     │
-                                       v                     │
-                               answer_output <───────────────┘
-                                       │
-                                       v
-                                      END
+                              ┌────────┴────────┐            │
+                              v                 v            │
+                         answer_output   web_search_mcp      │
+                              │                 │            │
+                              v                 └──> rerank ─┘
+                             END
     """
 
     # 1. 定义LangGraph工作流
@@ -113,18 +128,24 @@ def create_query_graph() -> CompiledStateGraph:
     workflow.add_edge("multi_search", "search_embedding")
     workflow.add_edge("multi_search", "search_embedding_hyde")
     workflow.add_edge("multi_search", "query_kg")
-    workflow.add_edge("multi_search", "web_search_mcp")
 
     # 7. 多路搜索汇合
     workflow.add_edge("search_embedding", "join")
     workflow.add_edge("search_embedding_hyde", "join")
     workflow.add_edge("query_kg", "join")
-    workflow.add_edge("web_search_mcp", "join")
 
     # 8. 顺序边
     workflow.add_edge("join", "rrf")
     workflow.add_edge("rrf", "rerank")
-    workflow.add_edge("rerank", "answer_output")
+    workflow.add_conditional_edges(
+        "rerank",
+        route_after_rerank,
+        {
+            "web_search_mcp": "web_search_mcp",
+            "answer_output": "answer_output",
+        }
+    )
+    workflow.add_edge("web_search_mcp", "rerank")
     workflow.add_edge("answer_output", END)
 
     # 9. 返回可运行的状态

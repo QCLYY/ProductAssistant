@@ -22,6 +22,11 @@ class AnswerOutputNode(BaseNode):
         if state.get("answer"):
             return state
 
+        if not self._has_reference_context(state):
+            state["answer"] = self._build_no_reference_answer(state)
+            self._write_history(state)
+            return state
+
         # 构建提示词
         prompt = self._build_prompt(state)
         state["prompt"] = prompt
@@ -43,6 +48,24 @@ class AnswerOutputNode(BaseNode):
     # ================================================================== #
     #                    提示词构建                                         #
     # ================================================================== #
+
+    @staticmethod
+    def _has_reference_context(state: QueryGraphState) -> bool:
+        return bool(state.get("reranked_docs") or state.get("kg_triples"))
+
+    @staticmethod
+    def _build_no_reference_answer(state: QueryGraphState) -> str:
+        use_local = state.get("use_local_search", True)
+        use_web = state.get("use_web_search", True)
+        web_attempted = state.get("web_search_attempted", False)
+
+        if use_local and use_web and web_attempted:
+            return "没有在已上传资料和联网搜索结果中查询到相关内容。"
+        if use_local:
+            return "没有在已上传资料中查询到相关内容。"
+        if use_web:
+            return "没有在联网搜索结果中查询到相关内容。"
+        return "请至少开启“本地搜索”或“联网搜索”中的一种能力后再提问。"
 
     def _build_prompt(self, state: QueryGraphState) -> str:
         question = state.get("rewritten_query") or state.get("original_query", "")

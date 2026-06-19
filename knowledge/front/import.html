@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件导入服务</title>
+    <title>品辅资料库导入</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -316,16 +316,204 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Light product theme overrides */
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, Arial, sans-serif;
+            align-items: flex-start;
+            background-color: #f4f8ff;
+            background-image: radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.18) 0%, transparent 32%),
+            radial-gradient(circle at 88% 16%, rgba(99, 102, 241, 0.13) 0%, transparent 30%),
+            radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.08) 0%, transparent 36%),
+            linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            color: #172033;
+        }
+
+        .container {
+            max-width: 880px;
+            margin-top: 26px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 24px 55px -30px rgba(15, 23, 42, 0.35);
+            color: #172033;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #075985;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ecfeff 0%, #dbeafe 48%, #ede9fe 100%);
+            border: 1px solid rgba(14, 165, 233, 0.22);
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.18);
+        }
+
+        h1 {
+            color: #0f172a;
+            text-align: left;
+            margin: 0;
+            letter-spacing: 0;
+            text-shadow: none;
+            font-size: 24px;
+        }
+
+        .page-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .page-link {
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #334155;
+            background: #ffffff;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .page-link:hover {
+            border-color: rgba(14, 165, 233, 0.34);
+            color: #075985;
+        }
+
+        .upload-area {
+            border-color: rgba(14, 165, 233, 0.32);
+            background: linear-gradient(180deg, #ffffff, #f8fbff);
+        }
+
+        .upload-area:hover {
+            border-color: #0ea5e9;
+            background: #eff6ff;
+            box-shadow: inset 0 0 22px rgba(14, 165, 233, 0.08);
+        }
+
+        .upload-icon {
+            filter: drop-shadow(0 8px 16px rgba(14, 165, 233, 0.18));
+        }
+
+        .upload-text,
+        .progress-text,
+        .log-details summary {
+            color: #64748b;
+        }
+
+        .file-item,
+        .log-details {
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        .file-item:hover {
+            box-shadow: 0 16px 32px -18px rgba(15, 23, 42, 0.35);
+            border-color: rgba(14, 165, 233, 0.24);
+        }
+
+        .file-name {
+            color: #172033;
+        }
+
+        .progress-bar-container {
+            background-color: #e2e8f0;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .log-details {
+            color: #334155;
+        }
+
+        .log-details summary:hover,
+        .log-list li::before {
+            color: #0ea5e9;
+        }
+
+        .log-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .log-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+
+        .log-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .log-done {
+            color: #047857;
+        }
+
+        .log-running {
+            color: #0369a1;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 20px;
+                margin-top: 0;
+            }
+
+            .page-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .file-item {
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            .file-info {
+                margin-right: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📄 知识库文件导入</h1>
+    <div class="page-header">
+        <div class="brand-block">
+            <span class="brand-mark">品</span>
+            <div>
+                <h1>品辅资料库导入</h1>
+                <p class="page-subtitle">上传产品说明、参数文档或 FAQ，作为品辅回答问题的资料来源。</p>
+            </div>
+        </div>
+        <a class="page-link" href="/front/chat.html">进入问答</a>
+    </div>
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <div class="upload-icon">☁️</div>
-        <div class="upload-text">点击或拖拽文件到此处 (PDF / MD / ZIP)</div>
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">点击或拖拽产品资料到此处 (PDF / MD / ZIP)</div>
         <input type="file" id="fileInput" class="file-input"  accept=".pdf,.md,.zip">
     </div>
 
@@ -343,8 +531,8 @@
 
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = '#38bdf8';
-        dropZone.style.background = 'rgba(56, 189, 248, 0.1)';
+        dropZone.style.borderColor = '#0ea5e9';
+        dropZone.style.background = '#eff6ff';
     });
 
     dropZone.addEventListener('dragleave', (e) => {

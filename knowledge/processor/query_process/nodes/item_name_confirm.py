@@ -37,6 +37,15 @@ class ItemNameConfirmNode(BaseNode):
             item_names=state.get("item_names", [])
         )
 
+        if self._is_material_list_query(query):
+            state["item_names"] = []
+            state["rewritten_query"] = query
+            state["answer"] = self._build_material_list_answer()
+            self._write_history(state, session_id, query, message_id)
+            state["history"] = history
+            self._dump_state(state, "输出")
+            return state
+
         # 2. LLM 提取商品名称
         extract_res = self._extract_item_names(query, history)
         item_names = extract_res.get("item_names", [])
@@ -95,6 +104,96 @@ class ItemNameConfirmNode(BaseNode):
         except Exception as e:
             self.logger.warning(f"保存消息失败: {e}")
             return ""
+
+    # ================================================================== #
+    #                      本地资料清单查询                                #
+    # ================================================================== #
+
+    @staticmethod
+    def _is_material_list_query(query: str) -> bool:
+        text = re.sub(r"\s+", "", query or "").lower()
+        if not text:
+            return False
+
+        material_words = [
+            "本地资料", "资料库", "知识库", "上传资料", "上传文件",
+            "上传过", "上传了", "导入过", "导入了", "已有资料", "已有文件",
+            "本地文件", "本地文档", "哪些pdf", "哪些markdown", "哪些md",
+        ]
+        list_words = [
+            "有哪些", "有什么", "哪些", "列表", "清单", "列出",
+            "显示", "查看", "当前", "目前", "现在", "已有", "上传过",
+            "导入过",
+        ]
+        return any(word in text for word in material_words) and any(
+            word in text for word in list_words
+        )
+
+    def _build_material_list_answer(self) -> str:
+        materials = self._list_local_materials()
+        if not materials:
+            return "目前没有查询到已上传的本地资料。"
+
+        lines = ["目前可以查询到以下本地资料："]
+        for index, item in enumerate(materials, 1):
+            file_title = item.get("file_title") or "未命名资料"
+            item_name = item.get("item_name") or ""
+            if item_name and item_name != file_title:
+                lines.append(f"{index}. {file_title}（识别名称：{item_name}）")
+            else:
+                lines.append(f"{index}. {file_title}")
+        return "\n".join(lines)
+
+    def _list_local_materials(self, limit: int = 1000) -> List[Dict[str, str]]:
+        from knowledge.tools.milvus_utils import get_milvus_client
+
+        client = get_milvus_client()
+        if not client:
+            self.logger.warning("无法连接本地向量库，无法列出资料清单")
+            return []
+
+        rows: List[Dict[str, Any]] = []
+        for collection_name, output_fields in [
+            (self.config.item_name_collection, ["file_title", "item_name"]),
+            (self.config.chunks_collection, ["file_title", "item_name"]),
+        ]:
+            if not collection_name:
+                continue
+            try:
+                if not client.has_collection(collection_name=collection_name):
+                    continue
+                rows = client.query(
+                    collection_name=collection_name,
+                    filter="",
+                    output_fields=output_fields,
+                    limit=limit,
+                )
+                if rows:
+                    break
+            except Exception as e:
+                self.logger.warning(f"读取资料清单失败: collection={collection_name}, error={e}")
+
+        return self._dedupe_material_rows(rows)
+
+    @staticmethod
+    def _dedupe_material_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        materials: List[Dict[str, str]] = []
+        seen: set[str] = set()
+        for row in rows or []:
+            file_title = str(row.get("file_title") or "").strip()
+            item_name = str(row.get("item_name") or "").strip()
+            display_key = file_title or item_name
+            if not display_key:
+                continue
+            key = f"{file_title}::{item_name}".lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            materials.append({
+                "file_title": file_title or item_name,
+                "item_name": item_name,
+            })
+        return materials
 
     # ================================================================== #
     #                      LLM 提取商品名称                               #
@@ -276,8 +375,8 @@ class ItemNameConfirmNode(BaseNode):
                 options.extend(m["item_name"] for m in mid[:max_options])
 
         return {
-            "confirmed_item_names": confirmed,
-            "options": options[:max_options],
+            "confirmed_item_names": list(dict.fromkeys(confirmed)),
+            "options": list(dict.fromkeys(options))[:max_options],
         }
 
     # ================================================================== #
@@ -291,6 +390,11 @@ class ItemNameConfirmNode(BaseNode):
         """根据对齐结果更新 state。"""
         confirmed = align_result.get("confirmed_item_names", [])
         options = align_result.get("options", [])
+        use_local_search = state.get("use_local_search", True)
+        use_web_search = (
+            state.get("use_web_search", True)
+            and getattr(self.config, "enable_web_search", False)
+        )
 
         if confirmed:
             confirmed = list(dict.fromkeys(confirmed))
@@ -299,31 +403,37 @@ class ItemNameConfirmNode(BaseNode):
             state["rewritten_query"] = rewritten_query
 
         elif options:
-            state["answer"] = (
-                f"我不确定您指的是哪款产品。"
-                f"您是在询问以下产品吗：{'、'.join(options)}？"
-            )
+            options = list(dict.fromkeys(options))
+            if len(options) == 1:
+                state["item_names"] = options
+                state["rewritten_query"] = rewritten_query
+            elif use_local_search:
+                self.logger.info(
+                    "资料名称候选不唯一，继续进行无资料名过滤的本地检索: %s",
+                    options,
+                )
+                state["item_names"] = []
+                state["rewritten_query"] = rewritten_query
+            elif use_web_search:
+                state["item_names"] = []
+                state["rewritten_query"] = rewritten_query
+            else:
+                state["answer"] = (
+                    "抱歉，我无法从已上传资料中确认相关内容。"
+                    "请开启本地搜索或联网搜索后再试。"
+                )
 
         else:
-            use_local_search = state.get("use_local_search", True)
-            use_web_search = (
-                state.get("use_web_search", True)
-                and getattr(self.config, "enable_web_search", False)
-            )
-
             if not use_local_search and not use_web_search:
                 state["answer"] = "请至少开启“本地搜索”或“联网搜索”中的一种能力后再提问。"
                 return state
 
-            if use_web_search:
+            if use_local_search or use_web_search:
                 state["item_names"] = []
                 state["rewritten_query"] = rewritten_query
                 return state
 
-            state["answer"] = (
-                "抱歉，我无法识别您询问的具体产品名称，"
-                "请提供更准确的产品名称或型号。"
-            )
+            state["answer"] = "抱歉，我无法从已上传资料中确认相关内容。"
 
         return state
 

@@ -31,6 +31,7 @@ class QueryGraphState(TypedDict):
     is_stream: bool # 是否流式输出
     use_local_search: bool # 是否启用本地资料检索
     use_web_search: bool # 是否启用联网搜索
+    web_search_attempted: bool # 是否已经尝试过联网搜索
     kg_chunks: list # 知识图谱切片
     kg_triples: list # 知识图谱三元组文本
     kg_seed_nodes: list # KG查询：Neo4j种子节点（调试用）
@@ -60,6 +61,7 @@ DEFAULT_STATE: QueryGraphState = {
     "is_stream": False,             # 是否流式输出 (默认设为 False)
     "use_local_search": True,        # 是否启用本地资料检索
     "use_web_search": True,          # 是否启用联网搜索
+    "web_search_attempted": False,    # 是否已经尝试过联网搜索
     "kg_chunks": [],                # 知识图谱切片
     "kg_triples": [],               # 知识图谱三元组文本
     "kg_seed_nodes": [],            # KG查询：Neo4j种子节点（调试用）

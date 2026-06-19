@@ -3,30 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>ProductAssistant</title>
+  <title>品辅</title>
   <style>
     :root{
-      --bg:#0f172a;
-      --panel:rgba(30, 41, 59, 0.7);
-      --text:#e2e8f0;
-      --muted:#94a3b8;
-      --brand:#38bdf8;
-      --brand2:#818cf8;
-      --bubble-user:linear-gradient(135deg, #38bdf8, #818cf8);
-      --bubble-bot:rgba(15, 23, 42, 0.6);
-      --border:rgba(255, 255, 255, 0.1);
-      --shadow:0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --bg:#f4f8ff;
+      --panel:rgba(255, 255, 255, 0.94);
+      --text:#172033;
+      --muted:#64748b;
+      --brand:#0ea5e9;
+      --brand2:#6366f1;
+      --bubble-user:linear-gradient(135deg, #0ea5e9, #6366f1);
+      --bubble-bot:#ffffff;
+      --border:rgba(15, 23, 42, 0.1);
+      --shadow:0 24px 55px -30px rgba(15, 23, 42, 0.35);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, Arial, sans-serif;
-      background-color: #0f172a;
-      background-image: radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 85% 30%, rgba(129, 140, 248, 0.08) 0%, transparent 50%),
-                        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.18) 0%, transparent 32%),
+                        radial-gradient(circle at 88% 16%, rgba(99, 102, 241, 0.13) 0%, transparent 30%),
+                        radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.08) 0%, transparent 36%),
+                        linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
       color:var(--text);
       height:100vh;
       display:flex;
@@ -54,7 +55,7 @@
       gap:12px;
       padding:14px 18px;
       border-bottom:1px solid var(--border);
-      background:rgba(15, 23, 42, 0.5);
+      background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.92));
       flex-wrap:wrap;
     }
     .brand{
@@ -65,8 +66,77 @@
     }
     .logo{
       width:36px;height:36px;border-radius:10px;
-      background:linear-gradient(135deg, var(--brand), var(--brand2));
-      box-shadow:0 0 20px rgba(56, 189, 248, 0.4);
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(135deg, #ecfeff 0%, #dbeafe 48%, #ede9fe 100%);
+      border:1px solid rgba(14, 165, 233, 0.22);
+      box-shadow:0 12px 22px rgba(14, 165, 233, 0.18);
+      flex:0 0 auto;
+    }
+    .logo::before{
+      content:"";
+      position:absolute;
+      inset:-16px auto auto -12px;
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      background:rgba(14, 165, 233, 0.2);
+    }
+    .logo-doc{
+      position:absolute;
+      left:9px;
+      top:7px;
+      width:15px;
+      height:20px;
+      border-radius:4px;
+      background:#fff;
+      border:1px solid rgba(14, 165, 233, 0.28);
+      box-shadow:0 4px 10px rgba(15, 23, 42, 0.08);
+    }
+    .logo-doc::before{
+      content:"";
+      position:absolute;
+      right:-1px;
+      top:-1px;
+      width:6px;
+      height:6px;
+      border-radius:0 4px 0 4px;
+      background:#dbeafe;
+      border-left:1px solid rgba(14, 165, 233, 0.22);
+      border-bottom:1px solid rgba(14, 165, 233, 0.22);
+    }
+    .logo-doc::after{
+      content:"";
+      position:absolute;
+      left:4px;
+      top:8px;
+      width:7px;
+      height:1px;
+      background:#93c5fd;
+      box-shadow:0 4px 0 #bfdbfe;
+    }
+    .logo-lens{
+      position:absolute;
+      right:7px;
+      bottom:8px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      border:3px solid #0ea5e9;
+      background:rgba(255,255,255,0.72);
+      box-shadow:0 5px 12px rgba(14, 165, 233, 0.22);
+    }
+    .logo-lens::after{
+      content:"";
+      position:absolute;
+      width:8px;
+      height:3px;
+      right:-7px;
+      bottom:-4px;
+      border-radius:999px;
+      background:#6366f1;
+      transform:rotate(45deg);
+      transform-origin:left center;
     }
     .title{
       display:flex;
@@ -89,7 +159,7 @@
       gap:14px;
       padding:10px 18px;
       border-bottom:1px solid var(--border);
-      background:rgba(15, 23, 42, 0.38);
+      background:rgba(248, 250, 252, 0.82);
     }
     .mode-title{
       display:flex;
@@ -99,7 +169,7 @@
     }
     .mode-title strong{
       font-size:13px;
-      color:#e2e8f0;
+      color:#0f172a;
     }
     .mode-title span{
       font-size:12px;
@@ -121,20 +191,20 @@
       border-radius:8px;
       border:1px solid var(--border);
       color:var(--muted);
-      background:rgba(15, 23, 42, 0.58);
+      background:#ffffff;
       font-size:12px;
       cursor:pointer;
       user-select:none;
       transition:border-color .18s ease, background .18s ease, color .18s ease;
     }
     .mode-toggle input{
-      accent-color:#38bdf8;
+      accent-color:#0ea5e9;
       cursor:pointer;
     }
     .mode-toggle.active{
-      color:#e2e8f0;
-      border-color:rgba(56, 189, 248, 0.35);
-      background:rgba(56, 189, 248, 0.1);
+      color:#075985;
+      border-color:rgba(14, 165, 233, 0.32);
+      background:rgba(14, 165, 233, 0.08);
     }
     .pill{
       font-size:12px;
@@ -142,7 +212,7 @@
       border:1px solid var(--border);
       padding:6px 10px;
       border-radius:999px;
-      background:rgba(15, 23, 42, 0.6);
+      background:#ffffff;
     }
     .btn{
       border:none;
@@ -158,9 +228,9 @@
       justify-content:center;
     }
     .btn.secondary{
-      color:#cbd5e1;
+      color:#334155;
       border:1px solid var(--border);
-      background:rgba(15, 23, 42, 0.55);
+      background:#ffffff;
     }
     .btn:disabled{opacity:.6;cursor:not-allowed}
 
@@ -168,7 +238,7 @@
       flex:1;
       overflow:auto;
       padding:16px 14px 10px;
-      background:rgba(15, 23, 42, 0.3);
+      background:linear-gradient(180deg, #f8fbff 0%, #f3f7fd 100%);
     }
     .dayline{
       text-align:center;
@@ -195,13 +265,16 @@
     }
     .avatar{
       width:34px;height:34px;border-radius:10px;
-      background:rgba(56, 189, 248, 0.15);
+      background:rgba(14, 165, 233, 0.1);
       display:flex;align-items:center;justify-content:center;
       font-size:14px;
-      color:#94a3b8;
+      color:#64748b;
       flex:0 0 auto;
     }
-    .avatar.bot{background:linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2))}
+    .avatar.bot{
+      background:linear-gradient(135deg, rgba(14, 165, 233, 0.14), rgba(99, 102, 241, 0.12));
+      color:#2563eb;
+    }
     .bubble{
       max-width:min(720px, 76%);
       display:inline-block;
@@ -214,25 +287,26 @@
       font-size:14px;
       white-space:pre-wrap;
       overflow-wrap: break-word;
-      color:#e2e8f0;
+      color:#172033;
+      box-shadow:0 10px 28px rgba(15, 23, 42, 0.06);
     }
     .welcome .bubble{
       max-width:min(800px, 86%);
       padding:16px;
       border-radius:8px;
-      background:linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.56));
-      border-color:rgba(56, 189, 248, 0.16);
+      background:linear-gradient(180deg, #ffffff, #f8fbff);
+      border-color:rgba(14, 165, 233, 0.18);
     }
     .welcome-title{
       margin:0 0 8px;
       font-size:18px;
       line-height:1.35;
-      color:#f8fafc;
+      color:#0f172a;
       font-weight:700;
     }
     .welcome-copy{
       margin:0;
-      color:#cbd5e1;
+      color:#475569;
       line-height:1.7;
     }
     .welcome-status{
@@ -248,8 +322,8 @@
       padding:5px 8px;
       border-radius:999px;
       border:1px solid rgba(148, 163, 184, 0.18);
-      background:rgba(30, 41, 59, 0.55);
-      color:#a5b4fc;
+      background:rgba(239, 246, 255, 0.9);
+      color:#2563eb;
       font-size:12px;
     }
     .quick-prompts{
@@ -259,17 +333,17 @@
       margin-top:14px;
     }
     .quick-prompt{
-      border:1px solid rgba(56, 189, 248, 0.22);
-      background:rgba(56, 189, 248, 0.08);
-      color:#dbeafe;
+      border:1px solid rgba(14, 165, 233, 0.22);
+      background:#eff6ff;
+      color:#1d4ed8;
       border-radius:8px;
       padding:7px 10px;
       font-size:12px;
       cursor:pointer;
     }
     .quick-prompt:hover{
-      border-color:rgba(56, 189, 248, 0.48);
-      background:rgba(56, 189, 248, 0.14);
+      border-color:rgba(14, 165, 233, 0.44);
+      background:#dbeafe;
     }
     .msg.user .bubble{
       background:var(--bubble-user);
@@ -281,13 +355,13 @@
       color:var(--muted);
       margin-top:6px;
     }
-    .msg.user .meta{color:rgba(255,255,255,.85)}
+    .msg.user .meta{color:#64748b}
     details.progress{
       margin-top:8px;
-      border:1px dashed rgba(56, 189, 248, 0.3);
+      border:1px dashed rgba(14, 165, 233, 0.32);
       border-radius:12px;
       padding:8px 10px;
-      background:rgba(15, 23, 42, 0.4);
+      background:#f8fbff;
     }
     details.progress summary{
       cursor:pointer;
@@ -296,7 +370,54 @@
       font-size:12px;
     }
     .progress ul{margin:8px 0 0 18px;padding:0}
-    .progress li{margin:4px 0;font-size:12px;color:#94a3b8}
+    .progress li{margin:4px 0;font-size:12px;color:#64748b}
+    .answer{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .answer-text{
+      line-height:1.75;
+      color:#172033;
+    }
+    .answer-text p{
+      margin:0 0 10px;
+    }
+    .answer-text h3,
+    .answer-text h4{
+      margin:14px 0 8px;
+      color:#0f172a;
+      font-weight:700;
+      line-height:1.45;
+    }
+    .answer-text h3{font-size:15px}
+    .answer-text h4{font-size:14px}
+    .answer-text ol,
+    .answer-text ul{
+      margin:6px 0 10px 20px;
+      padding:0;
+    }
+    .answer-text li{
+      margin:5px 0;
+      padding-left:2px;
+    }
+    .answer-text strong{
+      font-weight:700;
+      color:#0f172a;
+    }
+    .answer-text code{
+      padding:1px 5px;
+      border-radius:5px;
+      background:#eef6ff;
+      color:#1d4ed8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:.92em;
+    }
+    .answer-text hr{
+      border:none;
+      border-top:1px solid rgba(15, 23, 42, 0.1);
+      margin:10px 0;
+    }
 
     .answer-images{
       margin-top:10px;
@@ -312,8 +433,8 @@
       height: auto;
       border-radius:12px;
       border:1px solid var(--border);
-      box-shadow:0 10px 24px rgba(0, 0, 0, 0.3);
-      background:rgba(15, 23, 42, 0.6);
+      box-shadow:0 10px 24px rgba(15, 23, 42, 0.12);
+      background:#ffffff;
     }
     .answer-images a{
       font-size:12px;
@@ -327,7 +448,7 @@
     }
     .dot{
       width:7px;height:7px;border-radius:50%;
-      background:#38bdf8;
+      background:#0ea5e9;
       animation:bounce 1.2s infinite ease-in-out;
     }
     .dot:nth-child(2){animation-delay:.15s}
@@ -343,7 +464,7 @@
       display:flex;
       gap:10px;
       align-items:flex-end;
-      background:rgba(15, 23, 42, 0.5);
+      background:#ffffff;
     }
     textarea{
       flex:1;
@@ -356,10 +477,10 @@
       outline:none;
       font-size:14px;
       line-height:1.5;
-      background:rgba(15, 23, 42, 0.6);
-      color:#e2e8f0;
+      background:#f8fbff;
+      color:#172033;
     }
-    textarea:focus{border-color:rgba(56, 189, 248, 0.6); box-shadow:0 0 0 3px rgba(56, 189, 248, 0.15)}
+    textarea:focus{border-color:rgba(14, 165, 233, 0.6); box-shadow:0 0 0 3px rgba(14, 165, 233, 0.15)}
     textarea::placeholder{color:#64748b}
     .send{
       width:88px;
@@ -370,7 +491,7 @@
       font-size:14px;
       color:#fff;
       background:linear-gradient(135deg, var(--brand), var(--brand2));
-      box-shadow:0 0 15px rgba(56, 189, 248, 0.3);
+      box-shadow:0 10px 20px rgba(14, 165, 233, 0.2);
     }
     .send:disabled{opacity:.6;cursor:not-allowed}
     .hint{
@@ -384,8 +505,8 @@
       border:1px solid var(--border);
       padding:1px 6px;
       border-radius:6px;
-      background:rgba(15, 23, 42, 0.6);
-      color:#94a3b8;
+      background:#f8fbff;
+      color:#64748b;
     }
     @media (max-width: 720px){
       body{padding:10px;align-items:stretch}
@@ -403,9 +524,12 @@
   <div class="app">
     <div class="topbar">
       <div class="brand">
-        <div class="logo"></div>
+        <div class="logo" aria-hidden="true">
+          <span class="logo-doc"></span>
+          <span class="logo-lens"></span>
+        </div>
         <div class="title">
-          <strong>ProductAssistant</strong>
+          <strong>品辅</strong>
           <span id="subTitle">在线 · 产品资料问答与联网搜索</span>
         </div>
       </div>
@@ -436,10 +560,10 @@
     <div class="chat" id="chat">
       <div class="dayline">今天</div>
       <div class="msg bot welcome">
-        <div class="avatar bot">PA</div>
+        <div class="avatar bot">品</div>
         <div>
           <div class="bubble">
-            <div class="welcome-title">你好，我是你的产品助手小P</div>
+            <div class="welcome-title">你好，我是品辅，你的产品资料助手</div>
             <p class="welcome-copy">我可以基于你上传的产品资料回答问题，也可以联网搜索哦~有什么想问的欢迎咨询！</p>
             <div class="welcome-status">
               <span class="status-chip">本地资料问答</span>
@@ -647,6 +771,101 @@
       return keywords.some(k => t.includes(k));
     }
 
+    function appendInlineMarkdown(parent, rawText){
+      const text = String(rawText || '');
+      const tokenRe = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+      let lastIndex = 0;
+      let match;
+
+      while((match = tokenRe.exec(text)) !== null){
+        if(match.index > lastIndex){
+          parent.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        }
+
+        const token = match[0];
+        if(token.startsWith('**') && token.endsWith('**')){
+          const strong = document.createElement('strong');
+          strong.textContent = token.slice(2, -2);
+          parent.appendChild(strong);
+        }else if(token.startsWith('`') && token.endsWith('`')){
+          const code = document.createElement('code');
+          code.textContent = token.slice(1, -1);
+          parent.appendChild(code);
+        }
+        lastIndex = match.index + token.length;
+      }
+
+      if(lastIndex < text.length){
+        parent.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+    }
+
+    function renderMarkdownText(containerEl, markdownText){
+      containerEl.textContent = '';
+      const lines = String(markdownText || '').replace(/\r\n/g, '\n').split('\n');
+      let currentList = null;
+      let currentListType = '';
+
+      function closeList(){
+        currentList = null;
+        currentListType = '';
+      }
+
+      function appendListItem(type, content){
+        if(!currentList || currentListType !== type){
+          closeList();
+          currentList = document.createElement(type);
+          currentListType = type;
+          containerEl.appendChild(currentList);
+        }
+        const li = document.createElement('li');
+        appendInlineMarkdown(li, content);
+        currentList.appendChild(li);
+      }
+
+      for(const rawLine of lines){
+        const line = rawLine.trim();
+
+        if(!line){
+          closeList();
+          continue;
+        }
+
+        if(/^(\*\s*){3,}$|^(-\s*){3,}$|^_{3,}$/.test(line)){
+          closeList();
+          containerEl.appendChild(document.createElement('hr'));
+          continue;
+        }
+
+        const heading = line.match(/^(#{1,6})\s*(.+)$/);
+        if(heading){
+          closeList();
+          const level = heading[1].length <= 2 ? 'h3' : 'h4';
+          const h = document.createElement(level);
+          appendInlineMarkdown(h, heading[2].trim());
+          containerEl.appendChild(h);
+          continue;
+        }
+
+        const ordered = line.match(/^(\d+)[.、]\s+(.+)$/);
+        if(ordered){
+          appendListItem('ol', ordered[2]);
+          continue;
+        }
+
+        const unordered = line.match(/^[-*•]\s+(.+)$/);
+        if(unordered){
+          appendListItem('ul', unordered[1]);
+          continue;
+        }
+
+        closeList();
+        const p = document.createElement('p');
+        appendInlineMarkdown(p, line);
+        containerEl.appendChild(p);
+      }
+    }
+
     function renderAnswerWithImages(containerEl, answerText, candidateImageUrls){
       const { text, images: imagesFromBlock } = parseAnswerAndImages(answerText);
       const candidates = Array.isArray(candidateImageUrls)
@@ -675,7 +894,7 @@
       if((text || '').trim().length > 0){
         const textEl = document.createElement('div');
         textEl.className = 'answer-text';
-        textEl.textContent = text;
+        renderMarkdownText(textEl, text);
         containerEl.appendChild(textEl);
       }else{
         const textEl = document.createElement('div');
@@ -742,7 +961,7 @@
       const id = 'bot-his-' + Math.random().toString(36).slice(2);
       const html = `
         <div class="msg bot" id="${id}">
-          <div class="avatar bot">PA</div>
+          <div class="avatar bot">品</div>
           <div>
             <div class="bubble"><div class="answer"></div></div>
             <div class="meta">${formatTime(ts)}</div>
@@ -762,14 +981,16 @@
       const id = 'bot-' + Math.random().toString(36).slice(2);
       const html = `
         <div class="msg bot" id="${id}">
-          <div class="avatar bot">PA</div>
+          <div class="avatar bot">品</div>
           <div style="min-width: 180px;">
             <div class="bubble">
-              <span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
               <details class="progress" open>
                 <summary>阶段进度（等待中）</summary>
                 <ul></ul>
               </details>
+              <div class="answer">
+                <span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+              </div>
             </div>
             <div class="meta">${nowTime()}</div>
           </div>
@@ -828,8 +1049,8 @@
         const errEl = document.createElement('div');
         errEl.className = 'answer';
         errEl.textContent = `抱歉，本次处理失败：\n${err}`;
-        bubble.appendChild(errEl);
         if(progressEl) bubble.appendChild(progressEl);
+        bubble.appendChild(errEl);
         return;
       }
 
@@ -839,11 +1060,11 @@
         progressEl.removeAttribute('open'); // 完成后自动收起
       }
       bubble.textContent = '';
+      if(progressEl) bubble.appendChild(progressEl);
       const answerEl = document.createElement('div');
       answerEl.className = 'answer';
       bubble.appendChild(answerEl);
       renderAnswerWithImages(answerEl, answer || '', imageUrls || []);
-      if(progressEl) bubble.appendChild(progressEl);
     }
 
     async function loadHistory(){
@@ -954,7 +1175,12 @@
         if(!answerEl){
           answerEl = document.createElement('div');
           answerEl.className = 'answer';
-          bubble.insertBefore(answerEl, bubble.firstChild);
+          const progress = bubble.querySelector('details.progress');
+          if(progress && progress.nextSibling){
+            bubble.insertBefore(answerEl, progress.nextSibling);
+          }else{
+            bubble.appendChild(answerEl);
+          }
         }
 
         const es = new EventSource(`${API_BASE}/stream/${task_id}`);
@@ -1065,7 +1291,16 @@
         const progress = botMsgEl.querySelector('details.progress');
         const typing = botMsgEl.querySelector('.typing');
         if(typing) typing.remove();
-        bubble.innerHTML = `请求失败：${escapeHtml(e.message || e)}\n\n` + progress.outerHTML;
+        if(progress){
+          progress.remove();
+          progress.removeAttribute('open');
+        }
+        bubble.textContent = '';
+        if(progress) bubble.appendChild(progress);
+        const errEl = document.createElement('div');
+        errEl.className = 'answer';
+        errEl.textContent = `请求失败：${e.message || e}`;
+        bubble.appendChild(errEl);
         sendBtn.disabled = false;
       }
     }
