@@ -1,63 +1,94 @@
-# ProductAssistant
+# ProductAssistant（品辅）
 
-ProductAssistant 是一个本地运行的 AI 产品知识库助手。它可以导入 Markdown / PDF 产品资料，构建本地可检索知识库，并通过浏览器聊天页面进行问答；同时也支持 Tavily 联网搜索，用于补充本地知识库之外的信息。
+ProductAssistant，中文名暂定为“品辅”，是一个本地运行的 AI 产品资料问答助手。
 
-这个项目当前更偏向“个人产品知识助手 / 产品资料问答系统”的原型：上传什么资料，就可以围绕对应内容进行咨询，不局限于维修、技术顾问或某一种固定场景。
+它的核心目标是：上传任意产品资料或参考资料，例如 PDF、Markdown、ZIP 文档包，然后围绕这些资料进行问答。项目默认采用“本地资料优先”的逻辑：优先检索已经上传的本地资料；如果本地资料没有查到，并且用户开启了联网搜索，再通过联网搜索补充答案。
+
+当前项目仍处于个人原型和持续打磨阶段，但已经具备完整的资料导入、资料管理、本地问答、联网补充、流式输出和浏览器页面交互能力。
+
+## 当前定位
+
+品辅不是固定场景的维修助手，也不局限于某一类产品。
+
+它更像一个“上传什么资料，就能围绕什么资料提问”的资料问答系统：
+
+- 上传产品说明书，可以问产品参数、使用方法、注意事项。
+- 上传培训资料，可以问知识点、流程、结论。
+- 上传考研分析资料，可以问院校、专业、录取情况。
+- 上传多个资料后，可以让系统基于本地资料进行综合回答。
 
 ## 核心能力
 
-- 导入 Markdown 文档
-- 通过 MinerU 将 PDF 转换为 Markdown
-- 处理 Markdown 中的图片，并可上传到 MinIO
-- 对文档进行切分
-- 使用 BGE-M3 生成向量
-- 将文本向量写入 Milvus
-- 使用大模型抽取知识图谱，并写入 Neo4j
-- 使用 MongoDB 保存聊天历史
-- 通过浏览器聊天页进行本地知识库问答
-- 通过 Tavily 进行联网搜索补充
-- 支持 OpenAI 兼容格式的大模型接口
+- 支持上传 Markdown、PDF、ZIP。
+- PDF 可通过 MinerU 转换为 Markdown。
+- Markdown 图片可进行处理，并上传到本地对象存储。
+- 文档会被切分为片段，并写入本地向量索引。
+- 支持使用 BGE-M3 生成文本向量。
+- 支持基于大模型抽取资料中的实体关系，并写入本地知识关联服务。
+- 支持本地资料清单查看和资料删除。
+- 支持配置检查，方便确认本地服务和关键配置是否可用。
+- 支持聊天页本地资料问答。
+- 支持开启或关闭本地搜索。
+- 支持开启或关闭联网搜索。
+- 支持 Tavily 作为联网搜索源。
+- 支持流式输出。
+- 支持展示回答来源，便于判断答案来自本地资料还是联网补充。
+
+## 问答逻辑
+
+当前问答逻辑以“本地资料优先”为主：
+
+1. 用户提问。
+2. 如果开启了本地搜索，系统会先检索已经上传的本地资料。
+3. 如果本地资料查到了相关内容，优先基于本地资料回答。
+4. 如果本地资料没有查到，并且开启了联网搜索，系统再调用联网搜索补充。
+5. 如果本地和联网都没有可用结果，系统会明确说明没有找到相关资料。
+6. 本地结果和联网结果会尽量去重，避免重复内容堆叠。
+
+这个逻辑适合后续扩展为更通用的“个人资料库 + 联网补充”产品助手。
 
 ## 技术栈
 
 - Python 3.12
 - FastAPI + Uvicorn
 - LangGraph
-- Milvus + Attu
+- Docker Compose
+- Milvus / Attu
 - Neo4j
 - MongoDB
 - MinIO
 - BGE-M3 / FlagEmbedding
 - MinerU
-- OpenAI-compatible LLM API
+- OpenAI 兼容格式大模型接口
 - Tavily Search API
-- Docker Compose
 
 ## 项目结构
 
 ```text
 ProductAssistant/
-  docker-compose.yml              # 本地中间件服务
   README.md
   AGENTS.md
+  docker-compose.yml
   knowledge/
     api/                          # FastAPI 接口
-    front/                        # 前端页面
+    front/                        # 浏览器页面
+    services/                     # 资料管理、导入服务等
     processor/
-      import_process/             # 文档导入流程
+      import_process/             # 资料导入流程
       query_process/              # 问答查询流程
-    services/                     # 应用服务
-    tools/                        # Milvus / Neo4j / LLM 等工具
-    utils/                        # MinIO / VLM 等辅助工具
-    requirements.txt
+    tools/                        # 向量、图数据库、LLM、重排序等工具
+    utils/                        # MinIO、SSE、任务状态等工具
+    requirements.txt              # Python 依赖
     .env.example                  # 环境变量模板
 ```
 
 ## 运行前准备
 
-### 1. Python 环境
+### 1. 准备 Python 环境
 
-建议使用 Conda 或虚拟环境。当前本地验证环境为：
+建议使用 Conda 或 PyCharm 绑定的虚拟环境。
+
+当前本地验证环境：
 
 ```text
 Python 3.12
@@ -70,31 +101,9 @@ Conda 环境名：PA
 pip install -r knowledge/requirements.txt
 ```
 
-### 2. Docker 服务
+### 2. 准备环境变量
 
-项目依赖 Milvus、MinIO、Neo4j、MongoDB 等本地服务。
-
-启动：
-
-```powershell
-docker compose up -d
-```
-
-检查：
-
-```powershell
-docker compose ps
-```
-
-常用管理页面：
-
-- Attu / Milvus 管理：`http://127.0.0.1:7000`
-- MinIO 控制台：`http://127.0.0.1:9001`
-- Neo4j Browser：`http://127.0.0.1:7474`
-
-## 配置环境变量
-
-复制模板：
+复制环境变量模板：
 
 ```powershell
 copy knowledge\.env.example knowledge\.env
@@ -106,7 +115,29 @@ copy knowledge\.env.example knowledge\.env
 knowledge/.env
 ```
 
-重要配置分组如下。
+`knowledge/.env` 用于保存真实 API Key、模型配置和本地服务连接信息。这个文件已经被 `.gitignore` 忽略，不应该提交到 GitHub。
+
+### 3. 启动本地 Docker 服务
+
+项目依赖本地中间件服务，使用 Docker Compose 启动：
+
+```powershell
+docker compose up -d
+```
+
+查看服务状态：
+
+```powershell
+docker compose ps
+```
+
+常用管理页面：
+
+- Attu：`http://127.0.0.1:7000`
+- MinIO：`http://127.0.0.1:9001`
+- Neo4j Browser：`http://127.0.0.1:7474`
+
+## 关键配置说明
 
 ### 大模型配置
 
@@ -118,11 +149,13 @@ ITEM_MODEL=
 VL_MODEL=
 ```
 
-含义：
+说明：
 
-- `MODEL`：主要问答、知识抽取模型
-- `ITEM_MODEL`：用于识别文档或问题中的产品/主体名称
-- `VL_MODEL`：用于图片理解，只有处理图片时才真正需要
+- `OPENAI_API_BASE`：OpenAI 兼容接口地址。
+- `OPENAI_API_KEY`：大模型 API Key。
+- `MODEL`：主要问答和知识抽取模型。
+- `ITEM_MODEL`：资料主体识别模型，可以和 `MODEL` 使用同一个。
+- `VL_MODEL`：视觉模型，用于处理图片内容；如果暂时不处理图片，可以先使用支持图片输入的模型或后续再完善。
 
 ### 向量模型配置
 
@@ -132,12 +165,16 @@ BGE_DEVICE=cpu
 BGE_FP16=False
 ```
 
-如果本机已经下载了 BGE-M3，也可以把 `BGE_M3_PATH` 改成本地模型路径。
+说明：
 
-### Tavily 联网搜索
+- `BGE_M3_PATH`：BGE-M3 模型名称或本地模型路径。
+- `BGE_DEVICE`：CPU 环境使用 `cpu`，有合适显卡时可改为 `cuda`。
+- `BGE_FP16`：CPU 环境建议使用 `False`。
+
+### 联网搜索配置
 
 ```env
-ENABLE_WEB_SEARCH=true
+ENABLE_WEB_SEARCH=false
 WEB_SEARCH_PROVIDER=tavily
 TAVILY_API_KEY=
 TAVILY_API_URL=https://api.tavily.com/search
@@ -145,24 +182,28 @@ TAVILY_MAX_RESULTS=5
 TAVILY_SEARCH_DEPTH=basic
 ```
 
-如果只想查询本地知识库，可以关闭联网搜索：
+说明：
 
-```env
-ENABLE_WEB_SEARCH=false
-```
+- `ENABLE_WEB_SEARCH`：默认是否启用联网搜索。
+- `WEB_SEARCH_PROVIDER`：当前适配 Tavily。
+- `TAVILY_API_KEY`：Tavily 的 API Key。
+- `TAVILY_MAX_RESULTS`：每次搜索返回结果数量。
+- `TAVILY_SEARCH_DEPTH`：搜索深度，通常 `basic` 即可。
 
-### 数据库和对象存储
+### 本地服务配置
 
-默认使用本地 Docker 服务：
+默认连接 Docker Compose 启动的本地服务：
 
 ```env
 MILVUS_URL=http://127.0.0.1:19530
 NEO4J_URI=bolt://127.0.0.1:7687
-MONGO_URL=mongodb://admin:123456@127.0.0.1:27017
+MONGO_URL=mongodb://<username>:<password>@127.0.0.1:27017
 MINIO_ENDPOINT=127.0.0.1:9000
 ```
 
-### PDF 解析
+这些默认账号密码只适合本地开发。正式部署时应改为更安全的配置。
+
+### PDF 解析配置
 
 ```env
 MINERU_CMD=
@@ -173,7 +214,7 @@ MINERU_LANG=ch
 
 如果命令行找不到 `mineru`，可以把 `MINERU_CMD` 指向当前 Python 环境中的 `mineru.exe`。
 
-## 启动 API
+## 启动项目
 
 在项目根目录执行：
 
@@ -181,93 +222,107 @@ MINERU_LANG=ch
 D:\App\Anaconda\envs\PA\python.exe -m uvicorn knowledge.api.app:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-打开页面：
+如果已经在 PyCharm 中配置了运行项，也可以直接运行 `ProductAssistant API`。
 
-- 导入页面：`http://127.0.0.1:8000/`
+启动成功后打开：
+
+- 上传和资料管理页面：`http://127.0.0.1:8000/`
 - 聊天页面：`http://127.0.0.1:8000/front/chat.html`
 - API 文档：`http://127.0.0.1:8000/docs`
 
 ## 推荐验证流程
 
-### 1. 验证 API 页面
+### 1. 验证服务启动
 
-打开：
+打开以下页面：
 
 ```text
-http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/
 http://127.0.0.1:8000/front/chat.html
+http://127.0.0.1:8000/docs
 ```
 
-都能正常访问，说明 API 和静态页面启动成功。
+如果三个页面都能正常打开，说明 API 和静态页面已经启动成功。
 
-### 2. 验证 Markdown 导入
+### 2. 验证配置检查
 
-上传一个简单 Markdown，例如：
+在上传页面查看“配置检查”区域，确认本地索引、对象存储、知识关联、历史记录等服务是否正常。
 
-```markdown
-# 测试产品A
+### 3. 验证资料导入
 
-测试产品A是一款用于验证知识库导入流程的设备。
+上传一个 Markdown、PDF 或 ZIP 文件。
 
-## 使用方法
+导入成功时，页面会显示完整的阶段进度，例如：
 
-按下电源键 3 秒即可启动设备。
+- Markdown 图片处理
+- 文档切分
+- 资料主体识别
+- 向量生成
+- 写入本地资料索引
+- 生成知识关联
 
-请勿在潮湿环境中使用。
-```
+### 4. 验证本地资料清单
 
-导入页面显示 `已完成 7/7`，说明导入流程跑通。
+导入完成后，在上传页面查看“本地资料管理”区域。
 
-### 3. 验证本地知识库问答
+这里应该能看到已经写入本地索引的资料名称、识别出的主体名称和片段数量。
 
-在聊天页提问：
+### 5. 验证本地问答
+
+进入聊天页面，开启“本地搜索”，关闭“联网搜索”，然后提问：
 
 ```text
-测试产品A是什么？
+现在有哪些本地资料？
 ```
 
-预期：能够基于刚导入的文档回答。
+或者围绕刚上传的资料提问。
 
-### 4. 验证 Tavily 联网搜索
+如果本地资料中有答案，系统应优先基于本地资料回答；如果没有查到，应说明本地资料中没有找到相关内容。
 
-在聊天页提问：
+### 6. 验证联网补充
 
-```text
-OpenAI 官方网站是什么？
+进入聊天页面，同时开启“本地搜索”和“联网搜索”。
+
+当本地资料没有查到时，系统会尝试通过 Tavily 联网搜索补充答案。
+
+## 隐私和安全注意事项
+
+- 不要提交 `knowledge/.env`。
+- 不要把真实 API Key、数据库密码、服务 Token 写进 README 或代码。
+- 可以提交 `knowledge/.env.example`，但只能放占位值或本地开发默认值。
+- 上传到 GitHub 前建议执行：
+
+```powershell
+git status --ignored --short knowledge\.env .env
+git ls-files .env knowledge/.env
 ```
 
-预期：能够通过 Tavily 搜索并回答。
+正常情况下，真实 `.env` 文件应该显示为被忽略，且不应该出现在 `git ls-files` 结果里。
 
 ## 当前已验证状态
 
-本项目当前已经在本地验证过：
+本项目目前已经在本地验证过：
 
-- Docker 中间件服务全部启动
-- Markdown 导入完整跑通
-- Milvus 向量写入可用
-- Neo4j 图数据库连接可用
-- 本地知识库问答可用
-- Tavily 联网搜索可用
-- `knowledge/.env` 未被 Git 跟踪
+- Docker Compose 服务可启动。
+- API 服务可启动。
+- 上传页面可打开。
+- 聊天页面可打开。
+- API 文档可打开。
+- Markdown 资料导入可跑通。
+- PDF 资料导入可跑通。
+- 本地资料清单可查看。
+- 本地资料可删除。
+- 本地资料优先问答可用。
+- Tavily 联网搜索已适配。
+- `.env` 未被 Git 跟踪。
 
-## 注意事项
+## 后续可优化方向
 
-- `knowledge/.env` 包含真实 API key 和密码，不能提交到 GitHub。
-- `knowledge/.env.example` 只保存占位配置，可以提交。
-- `IMPORT_SMOKE_TEST=true` 只用于基础流程测试；真实导入时应使用：
-
-```env
-IMPORT_SMOKE_TEST=false
-```
-
-- `BGE_RERANKER_LARGE` 是可选配置。为空时，重排序会自动降级，不影响基础问答。
-- 视觉模型是否可用取决于具体模型平台是否支持 OpenAI 兼容的图片输入。
-
-## 后续计划
-
-- 优化聊天页 UI，使其更接近正式产品风格
-- 统一上传页和聊天页的视觉设计
-- 增强 PDF / 图片资料的处理效果
-- 增加更多搜索源或搜索源切换能力
-- 完善知识图谱展示和调试页面
+- 进一步优化聊天页视觉效果和移动端适配。
+- 增强 PDF 解析失败时的错误提示。
+- 增加资料重命名、资料标签、资料分组。
+- 增加更清晰的引用来源展示。
+- 增加会话记忆和历史会话管理。
+- 增加批量删除和重新索引能力。
+- 增加 Docker 一键启动 API 的配置。
+- 清理历史遗留命名和旧代码路径。
